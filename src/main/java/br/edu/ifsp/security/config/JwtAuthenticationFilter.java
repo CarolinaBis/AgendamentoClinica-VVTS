@@ -1,4 +1,4 @@
-package br.ifsp.demo.security.config;
+package br.edu.ifsp.security.config;
 
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;

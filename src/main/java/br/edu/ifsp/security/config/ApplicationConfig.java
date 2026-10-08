@@ -1,6 +1,6 @@
-package br.ifsp.demo.security.config;
+package br.ifsp.security.config;
 
-import br.ifsp.demo.security.user.UserRepository;
+import br.edu.ifsp.security.user.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

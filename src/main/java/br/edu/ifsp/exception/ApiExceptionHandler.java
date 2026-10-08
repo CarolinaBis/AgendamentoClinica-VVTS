@@ -1,17 +1,17 @@
 package br.edu.ifsp.exception;
 
-import br.ifsp.demo.dominio.excecao.ConflitoDeAgendaException;
-import br.ifsp.demo.dominio.excecao.DataHoraNoPassadoException;
-import br.ifsp.demo.dominio.excecao.DominioException;
-import br.ifsp.demo.dominio.excecao.ForaDoHorarioDeFuncionamentoException;
-import br.ifsp.demo.dominio.excecao.HorarioNaoAtingidoException;
-import br.ifsp.demo.dominio.excecao.PacienteBloqueadoException;
-import br.ifsp.demo.dominio.excecao.ProcedimentoDuplicadoException;
-import br.ifsp.demo.dominio.excecao.ProcedimentoNaoEncontradoException;
-import br.ifsp.demo.dominio.excecao.ProcedimentosPendentesException;
-import br.ifsp.demo.dominio.excecao.RecursoNaoEncontradoException;
-import br.ifsp.demo.dominio.excecao.StatusInvalidoException;
-import br.ifsp.demo.dominio.excecao.UltimoProcedimentoException;
+import br.edu.ifsp.dominio.excecao.ConflitoDeAgendaException;
+import br.edu.ifsp.dominio.excecao.DataHoraNoPassadoException;
+import br.edu.ifsp.dominio.excecao.DominioException;
+import br.edu.ifsp.dominio.excecao.ForaDoHorarioDeFuncionamentoException;
+import br.edu.ifsp.dominio.excecao.HorarioNaoAtingidoException;
+import br.edu.ifsp.dominio.excecao.PacienteBloqueadoException;
+import br.edu.ifsp.dominio.excecao.ProcedimentoDuplicadoException;
+import br.edu.ifsp.dominio.excecao.ProcedimentoNaoEncontradoException;
+import br.edu.ifsp.dominio.excecao.ProcedimentosPendentesException;
+import br.edu.ifsp.dominio.excecao.RecursoNaoEncontradoException;
+import br.edu.ifsp.dominio.excecao.StatusInvalidoException;
+import br.edu..dominio.excecao.UltimoProcedimentoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -23,11 +23,6 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
-/**
- * Tratador de exceções do projeto base (400/403/409), sem a dependência de JPA, e estendido
- * com o mapeamento das exceções do domínio da clínica:
- * 404 não encontrado | 409 conflito com o estado atual | 422 regra de negócio | 400 dados inválidos.
- */
 @ControllerAdvice
 public class ApiExceptionHandler {
 
@@ -51,7 +46,6 @@ public class ApiExceptionHandler {
         return resposta(CONFLICT, e);
     }
 
-    /** Violações de regra do domínio da clínica. */
     @ExceptionHandler(value = DominioException.class)
     public ResponseEntity<?> handleDominioException(DominioException e) {
         return resposta(statusDe(e), e);
