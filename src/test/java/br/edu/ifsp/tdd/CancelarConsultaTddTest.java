@@ -31,4 +31,41 @@ class CancelarConsultaTddTest extends TesteBase {
         assertEquals(StatusAgendamento.CANCELADO,
                 agendamentos.buscarPorId(ag.getId()).orElseThrow().getStatus());
     }
+
+    @Test
+    @DisplayName("S3.2 - Cancelamento de agendamento já realizado")
+    void s3_2_cancelamentoDeAgendamentoJaRealizado() {
+        Agendamento ag = persistirAgendamento(maria, PROFISSIONAL_A, meiaHora(SEGUNDA, 8, 0),
+                StatusAgendamento.REALIZADO, consulta.getId());
+
+        assertThrows(StatusInvalidoException.class, () -> agendamentoService.cancelar(ag.getId()));
+
+        assertEquals(StatusAgendamento.REALIZADO,
+                agendamentos.buscarPorId(ag.getId()).orElseThrow().getStatus());
+    }
+
+    @Test
+    @DisplayName("S3.3 - Cancelamento tardio conta como falta")
+    void s3_3_cancelamentoTardioContaComoFalta() {
+        // agora = seg 09:00; consulta na terça 08:30 => 23h30 de antecedência (< 24h)
+        Agendamento ag = agendamentoService.agendar(maria.getId(), PROFISSIONAL_A,
+                meiaHora(TERCA, 8, 30), List.of(consulta.getId()));
+
+        Agendamento cancelado = agendamentoService.cancelar(ag.getId());
+
+        assertEquals(StatusAgendamento.CANCELADO, cancelado.getStatus());
+        assertEquals(1, faltasVigentesDaMaria());
+    }
+
+    @Test
+    @DisplayName("S3.4 - Cancelamento com antecedência não gera penalidade")
+    void s3_4_cancelamentoComAntecedenciaNaoGeraPenalidade() {
+        // quarta 10:00 => 49h de antecedência (>= 24h)
+        Agendamento ag = agendamentoService.agendar(maria.getId(), PROFISSIONAL_A,
+                meiaHora(QUARTA, 10, 0), List.of(consulta.getId()));
+
+        agendamentoService.cancelar(ag.getId());
+
+        assertEquals(0, faltasVigentesDaMaria());
+    }
 }
