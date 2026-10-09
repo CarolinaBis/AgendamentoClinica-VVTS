@@ -11,7 +11,7 @@ import br.edu.ifsp.dominio.excecao.ProcedimentoNaoEncontradoException;
 import br.edu.ifsp.dominio.excecao.ProcedimentosPendentesException;
 import br.edu.ifsp.dominio.excecao.RecursoNaoEncontradoException;
 import br.edu.ifsp.dominio.excecao.StatusInvalidoException;
-import br.edu..dominio.excecao.UltimoProcedimentoException;
+import br.edu.ifsp.dominio.excecao.UltimoProcedimentoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
