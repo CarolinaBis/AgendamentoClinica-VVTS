@@ -1,5 +1,8 @@
 package br.edu.ifsp.tdd;
 
+import br.edu.ifsp.dominio.agendamento.Agendamento;
+import br.edu.ifsp.dominio.agendamento.StatusAgendamento;
+import br.edu.ifsp.dominio.excecao.StatusInvalidoException;
 import br.edu.ifsp.suporte.TesteBase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -8,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag("UnitTest")
 @Tag("TDD")
@@ -47,7 +51,6 @@ class CancelarConsultaTddTest extends TesteBase {
     @Test
     @DisplayName("S3.3 - Cancelamento tardio conta como falta")
     void s3_3_cancelamentoTardioContaComoFalta() {
-        // agora = seg 09:00; consulta na terça 08:30 => 23h30 de antecedência (< 24h)
         Agendamento ag = agendamentoService.agendar(maria.getId(), PROFISSIONAL_A,
                 meiaHora(TERCA, 8, 30), List.of(consulta.getId()));
 
@@ -60,7 +63,6 @@ class CancelarConsultaTddTest extends TesteBase {
     @Test
     @DisplayName("S3.4 - Cancelamento com antecedência não gera penalidade")
     void s3_4_cancelamentoComAntecedenciaNaoGeraPenalidade() {
-        // quarta 10:00 => 49h de antecedência (>= 24h)
         Agendamento ag = agendamentoService.agendar(maria.getId(), PROFISSIONAL_A,
                 meiaHora(QUARTA, 10, 0), List.of(consulta.getId()));
 

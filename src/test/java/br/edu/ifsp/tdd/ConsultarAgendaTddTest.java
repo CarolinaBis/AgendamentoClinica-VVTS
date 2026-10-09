@@ -22,7 +22,7 @@ class ConsultarAgendaTddTest extends TesteBase {
     @Test
     @DisplayName("S4.1 - Agenda com consultas no dia")
     void s4_1_agendaComConsultasNoDia() {
-        // cadastradas fora de ordem de propósito
+
         agendamentoService.agendar(maria.getId(), PROFISSIONAL_A, meiaHora(QUARTA, 11, 0), List.of(consulta.getId()));
         agendamentoService.agendar(joao.getId(), PROFISSIONAL_A, meiaHora(QUARTA, 9, 30), List.of(consulta.getId()));
 
