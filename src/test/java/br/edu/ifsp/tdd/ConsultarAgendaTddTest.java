@@ -1,7 +1,7 @@
 package br.edu.ifsp.tdd;
 
 import br.edu.ifsp.aplicacao.AgendaDoDia;
-import br.edu.ifsp.agendamento.Agendamento;
+import br.edu.ifsp.dominio.agendamento.Agendamento;
 import br.edu.ifsp.suporte.TesteBase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;

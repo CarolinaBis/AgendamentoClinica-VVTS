@@ -1,5 +1,10 @@
 package br.edu.ifsp.tdd;
 
+import br.edu.ifsp.dominio.agendamento.Agendamento;
+import br.edu.ifsp.dominio.agendamento.PeriodoAtendimento;
+import br.edu.ifsp.dominio.agendamento.StatusAgendamento;
+import br.edu.ifsp.dominio.excecao.*;
+import br.edu.ifsp.dominio.paciente.Falta;
 import br.edu.ifsp.suporte.TesteBase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
