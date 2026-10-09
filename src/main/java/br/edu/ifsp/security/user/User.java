@@ -74,7 +74,6 @@ public class User implements UserDetails {
 
     @Override
     public String toString() {
-        // nunca imprime a senha
         return "User{id=" + id + ", email=" + email + ", role=" + role + "}";
     }
 }
