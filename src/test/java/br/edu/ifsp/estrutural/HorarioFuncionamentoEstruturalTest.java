@@ -28,4 +28,11 @@ class HorarioFuncionamentoEstruturalTest {
         assertThrows(IllegalArgumentException.class,
                 () -> new HorarioFuncionamento(Set.of(DayOfWeek.MONDAY), null, LocalTime.of(18, 0)));
     }
+
+    @Test
+    @DisplayName("rejeita fechamento nulo")
+    void rejeitaFechamentoNulo() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new HorarioFuncionamento(Set.of(DayOfWeek.MONDAY), LocalTime.of(8, 0), null));
+    }
 }
