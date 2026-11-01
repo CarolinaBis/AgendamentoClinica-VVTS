@@ -189,7 +189,7 @@
           // 404/502/503/504 sem a mensagem padrão da API = o servidor da API não está respondendo
           const indisponivel = !mensagem && [404, 502, 503, 504].includes(resposta.status);
           const erro = new Error(mensagem || (indisponivel
-            ? "O servidor da API não respondeu (erro " + resposta.status + "). O back-end está no ar?"
+            ? "O servidor da API não respondeu (erro " + resposta.status + ")."
             : "Erro " + resposta.status));
           erro.status = resposta.status;
           erro.semMensagem = !mensagem && !indisponivel;
