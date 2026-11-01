@@ -7,7 +7,7 @@ import org.junit.platform.suite.api.SuiteDisplayName;
 
 @Suite
 @SuiteDisplayName("Todos os testes unitários")
-@SelectPackages({"br.edu.ifsp.tdd", "br.edu.ifsp.funcional"})
+@SelectPackages({"br.edu.ifsp.tdd", "br.edu.ifsp.funcional", "br.edu.ifsp.estrutural"})
 @IncludeTags("UnitTest")
 public class SuiteUnitaria {
 }
