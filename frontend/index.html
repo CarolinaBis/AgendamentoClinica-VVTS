@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Agendamento de Clínica</title>
+    <style>
+        :root { --azul:#1f5fae; --cinza:#f3f5f8; --borda:#d5dbe3; --erro:#b3261e; --ok:#1b7a3d; }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body { font-family: system-ui, Arial, sans-serif; margin: 0; background: var(--cinza); color: #1d2733; }
+        header { background: var(--azul); color: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.2rem; margin: 0; }
+        main { max-width: 980px; margin: 20px auto; padding: 0 12px; }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+        .card, form.card { background: #fff; border: 1px solid var(--borda); border-radius: 8px; padding: 14px; }
+        h2 { font-size: 1rem; margin: 0 0 10px; }
+        label { display: block; font-size: .85rem; margin: 8px 0 2px; }
+        input, select { width: 100%; padding: 7px; border: 1px solid var(--borda); border-radius: 5px; font: inherit; }
+        button { margin-top: 10px; padding: 7px 12px; border: 0; border-radius: 5px; background: var(--azul); color: #fff; cursor: pointer; font: inherit; }
+        button.sec { background: #5b6b7e; }
+        button + button { margin-left: 6px; }
+        #aviso { margin: 14px 0; padding: 10px; border-radius: 6px; background: #fff; border: 1px solid var(--borda); min-height: 2.4em; }
+        #aviso.erro { border-color: var(--erro); color: var(--erro); }
+        #aviso.ok { border-color: var(--ok); color: var(--ok); }
+        table { border-collapse: collapse; width: 100%; font-size: .85rem; margin-top: 8px; background: #fff; }
+        th, td { border: 1px solid var(--borda); padding: 5px 7px; text-align: left; }
+        th { background: var(--cinza); }
+        pre { background: #fff; border: 1px solid var(--borda); border-radius: 6px; padding: 10px; overflow: auto; font-size: .8rem; }
+        #usuario { display: flex; gap: 10px; align-items: center; font-size: .9rem; }
+        #usuario button { margin: 0; background: #fff; color: var(--azul); }
+    </style>
+</head>
+<body>
+<script>
+    // URL do back-end. Vazio = mesmo endereço de onde a página foi aberta (Spring Boot servindo este arquivo,
+    // ou Vercel com "rewrites" para o back-end). Para chamar outro endereço direto, ex.: "https://meu-backend.exemplo.com"
+    // (nesse caso o back-end precisa liberar CORS).
+    window.API_BASE = "";
+</script>
+
+<header>
+    <h1>Agendamento de Clínica</h1>
+    <div id="usuario" hidden><span id="usuario-email"></span><button id="sair" type="button">Sair</button></div>
+</header>
+
+<main>
+    <div id="aviso" role="status" aria-live="polite">Entre ou registre um usuário para começar.</div>
+
+    <!-- ===== Login e registro ===== -->
+    <section id="tela-login" class="cards">
+        <form id="form-entrar" class="card">
+            <h2>Entrar</h2>
+            <label>E-mail <input name="username" type="email" required></label>
+            <label>Senha <input name="password" type="password" required></label>
+            <button type="submit" id="btn-entrar">Entrar</button>
+        </form>
+        <form id="form-registrar" class="card">
+            <h2>Registrar usuário</h2>
+            <label>Nome <input name="name" required></label>
+            <label>Sobrenome <input name="lastname" required></label>
+            <label>E-mail <input name="email" type="email" required></label>
+            <label>Senha <input name="password" type="password" required></label>
+            <button type="submit" id="btn-registrar">Registrar</button>
+        </form>
+    </section>
+
+    <!-- ===== Aplicação (só aparece depois de entrar) ===== -->
+    <section id="tela-app" hidden>
+        <div class="cards">
+            <div class="card">
+                <h2>Cadastros</h2>
+                <form id="form-paciente">
+                    <label>Nome do paciente <input name="nome" required></label>
+                    <button type="submit" id="btn-cadastrar-paciente">Cadastrar paciente</button>
+                </form>
+                <form id="form-procedimento">
+                    <label>Nome do procedimento <input name="nome" required></label>
+                    <button type="submit" id="btn-cadastrar-procedimento">Cadastrar procedimento</button>
+                    <button type="button" id="listar-procedimentos" class="sec">Listar</button>
+                </form>
+            </div>
+
+            <form id="form-agendar" class="card">
+                <h2>Agendar consulta</h2>
+                <label>Paciente (id) <input name="pacienteId" type="number" min="1" required></label>
+                <label>Profissional (id) <input name="profissionalId" type="number" min="1" required></label>
+                <label>Início <input name="inicio" type="datetime-local" required></label>
+                <label>Fim <input name="fim" type="datetime-local" required></label>
+                <label>Procedimentos (ids separados por vírgula) <input name="procedimentoIds" placeholder="1,2"></label>
+                <button type="submit" id="btn-agendar">Agendar</button>
+            </form>
+
+            <form id="form-agenda" class="card">
+                <h2>Agenda do profissional</h2>
+                <label>Profissional (id) <input name="profissionalId" type="number" min="1" required></label>
+                <label>Data (vazio = hoje) <input name="data" type="date"></label>
+                <button type="submit" id="btn-consultar-agenda">Consultar agenda</button>
+            </form>
+
+            <form id="form-historico" class="card">
+                <h2>Paciente: histórico e faltas</h2>
+                <label>Paciente (id) <input name="pacienteId" type="number" min="1" required></label>
+                <label>Status
+                    <select name="status">
+                        <option value="">Todos</option><option>CONFIRMADO</option><option>CANCELADO</option>
+                        <option>REALIZADO</option><option>NAO_COMPARECEU</option>
+                    </select>
+                </label>
+                <label>De <input name="de" type="date"></label>
+                <label>Até <input name="ate" type="date"></label>
+                <button type="submit" id="btn-ver-historico">Ver histórico</button>
+                <button type="button" id="ver-faltas" class="sec">Ver faltas</button>
+            </form>
+
+            <form id="form-acoes" class="card">
+                <h2>Ações em um agendamento</h2>
+                <label>Agendamento (id) <input name="id" type="number" min="1" required></label>
+                <button type="button" id="btn-cancelar" data-acao="cancelar">Cancelar</button>
+                <button type="button" id="btn-falta" data-acao="falta" class="sec">Registrar falta</button>
+                <button type="button" id="btn-realizacao" data-acao="realizacao" class="sec">Confirmar realização</button>
+                <label>Novo início (remarcar) <input name="novoInicio" type="datetime-local"></label>
+                <label>Novo fim <input name="novoFim" type="datetime-local"></label>
+                <button type="button" id="btn-remarcar" data-acao="remarcar">Remarcar</button>
+                <label>Procedimento (id) <input name="procedimentoId" type="number" min="1"></label>
+                <button type="button" id="btn-adicionar" data-acao="adicionar">Adicionar</button>
+                <button type="button" id="btn-remover" data-acao="remover" class="sec">Remover</button>
+                <button type="button" id="btn-executar" data-acao="executar" class="sec">Marcar executado</button>
+            </form>
+        </div>
+    </section>
+
+    <div id="resultado"></div>
+</main>
+
+<script>
+    (function () {
+      "use strict";
+      const API = (window.API_BASE || "") + "/api/v1";
+      const $ = (seletor) => document.querySelector(seletor);
+      let token = sessionStorage.getItem("token");
+      let usuario = sessionStorage.getItem("usuario");
+
+      // ---------- mensagens e tela ----------
+      function aviso(texto, tipo) {
+        const el = $("#aviso");
+        el.textContent = texto;
+        el.className = tipo || "";
+      }
+      function limparResultado() { $("#resultado").replaceChildren(); }
+
+      function atualizarTela() {
+        const logado = Boolean(token);
+        $("#tela-login").hidden = logado;
+        $("#tela-app").hidden = !logado;
+        $("#usuario").hidden = !logado;
+        $("#usuario-email").textContent = logado ? usuario : "";
+      }
+
+      function sair(mensagem, tipo) {
+        token = null; usuario = null;
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("usuario");
+        limparResultado();
+        atualizarTela();
+        aviso(mensagem || "Você saiu.", tipo);
+      }
+
+      // ---------- chamada à API ----------
+      async function chamar(metodo, caminho, corpo) {
+        const cabecalhos = {};
+        if (corpo !== undefined) cabecalhos["Content-Type"] = "application/json";
+        if (token) cabecalhos["Authorization"] = "Bearer " + token;
+        let resposta;
+        try {
+          resposta = await fetch(API + caminho, {
+            method: metodo,
+            headers: cabecalhos,
+            body: corpo !== undefined ? JSON.stringify(corpo) : undefined
+          });
+        } catch (e) {
+          throw new Error("Não foi possível falar com o servidor. Ele está rodando?");
+        }
+        const texto = await resposta.text();
+        let dados = null;
+        if (texto) { try { dados = JSON.parse(texto); } catch (e) { dados = texto; } }
+        if (!resposta.ok) {
+          const mensagem = dados && dados.message;
+          // 404/502/503/504 sem a mensagem padrão da API = o servidor da API não está respondendo
+          const indisponivel = !mensagem && [404, 502, 503, 504].includes(resposta.status);
+          const erro = new Error(mensagem || (indisponivel
+            ? "O servidor da API não respondeu (erro " + resposta.status + "). O back-end está no ar?"
+            : "Erro " + resposta.status));
+          erro.status = resposta.status;
+          erro.semMensagem = !mensagem && !indisponivel;
+          throw erro;
+        }
+        return dados;
+      }
+
+      // Executa uma ação, mostra o resultado e trata erros de forma única.
+      async function executar(acao, aoTerminar) {
+        try {
+          const dados = await acao();
+          limparResultado();
+          aoTerminar(dados);
+        } catch (e) {
+          if (token && (e.status === 401 || e.status === 403) && e.semMensagem) {
+            sair("Sessão expirada. Entre novamente.", "erro");
+          } else {
+            limparResultado();
+            aviso(e.message, "erro");
+          }
+        }
+      }
+
+      // ---------- exibição ----------
+      function celula(linha, texto, cabecalho) {
+        const c = document.createElement(cabecalho ? "th" : "td");
+        c.textContent = texto;
+        linha.appendChild(c);
+      }
+      function tabela(colunas, linhas) {
+        const t = document.createElement("table");
+        const cab = document.createElement("tr");
+        colunas.forEach((nome) => celula(cab, nome, true));
+        t.appendChild(cab);
+        linhas.forEach((valores) => {
+          const l = document.createElement("tr");
+          valores.forEach((v) => celula(l, v, false));
+          t.appendChild(l);
+        });
+        return t;
+      }
+      const hora = (iso) => (iso ? String(iso).replace("T", " ") : "");
+
+      function mostrarAgendamentos(lista) {
+        $("#resultado").appendChild(tabela(
+          ["ID", "Paciente", "Profissional", "Início", "Fim", "Status", "Procedimentos (✓ = executado)"],
+          lista.map((a) => [a.id, a.pacienteId, a.profissionalId, hora(a.inicio), hora(a.fim),
+            a.statusRotulo || a.status,
+            a.procedimentos.map((p) => p.procedimentoId + (p.executado ? " ✓" : "")).join(", ")])));
+      }
+      function mostrarJson(objeto) {
+        const pre = document.createElement("pre");
+        pre.textContent = JSON.stringify(objeto, null, 2);
+        $("#resultado").appendChild(pre);
+      }
+
+      // ---------- util de formulário ----------
+      const valores = (form) => Object.fromEntries(new FormData(form).entries());
+      const dataHora = (v) => (v && v.length === 16 ? v + ":00" : v);
+      function consulta(params) {
+        const q = Object.entries(params).filter(([, v]) => v).map(([k, v]) => k + "=" + encodeURIComponent(v));
+        return q.length ? "?" + q.join("&") : "";
+      }
+      function aoEnviar(seletor, tratador) {
+        $(seletor).addEventListener("submit", (e) => { e.preventDefault(); tratador(e.target); });
+      }
+
+      // ---------- login e registro ----------
+      aoEnviar("#form-entrar", async (form) => {
+        const v = valores(form);
+        try {
+          const dados = await chamar("POST", "/authenticate", { username: v.username, password: v.password });
+          token = dados.token; usuario = v.username;
+          sessionStorage.setItem("token", token);
+          sessionStorage.setItem("usuario", usuario);
+          form.reset();
+          atualizarTela();
+          aviso("Bem-vindo(a), " + usuario + ".", "ok");
+        } catch (e) {
+          aviso(e.semMensagem ? "E-mail ou senha inválidos." : e.message, "erro");
+        }
+      });
+
+      aoEnviar("#form-registrar", async (form) => {
+        const v = valores(form);
+        try {
+          await chamar("POST", "/register", { name: v.name, lastname: v.lastname, email: v.email, password: v.password });
+          form.reset();
+          aviso("Usuário criado. Agora entre com o seu e-mail e senha.", "ok");
+        } catch (e) {
+          aviso(e.message, "erro");
+        }
+      });
+
+      $("#sair").addEventListener("click", () => sair("Você saiu."));
+
+      // ---------- cadastros ----------
+      aoEnviar("#form-paciente", (form) => executar(
+        () => chamar("POST", "/pacientes", { nome: valores(form).nome }),
+        (d) => { form.reset(); aviso("Paciente cadastrado: id " + d.id + ".", "ok"); mostrarJson(d); }));
+
+      aoEnviar("#form-procedimento", (form) => executar(
+        () => chamar("POST", "/procedimentos", { nome: valores(form).nome }),
+        (d) => { form.reset(); aviso("Procedimento cadastrado: id " + d.id + ".", "ok"); mostrarJson(d); }));
+
+      $("#listar-procedimentos").addEventListener("click", () => executar(
+        () => chamar("GET", "/procedimentos"),
+        (lista) => {
+          aviso(lista.length + " procedimento(s).", "ok");
+          $("#resultado").appendChild(tabela(["ID", "Nome"], lista.map((p) => [p.id, p.nome])));
+        }));
+
+      // ---------- agendamento ----------
+      aoEnviar("#form-agendar", (form) => {
+        const v = valores(form);
+        const ids = v.procedimentoIds.split(",").map((s) => s.trim()).filter(Boolean).map(Number);
+        executar(
+          () => chamar("POST", "/agendamentos", {
+            pacienteId: Number(v.pacienteId), profissionalId: Number(v.profissionalId),
+            inicio: dataHora(v.inicio), fim: dataHora(v.fim), procedimentoIds: ids }),
+          (a) => { aviso("Consulta agendada: id " + a.id + " (" + a.statusRotulo + ").", "ok"); mostrarAgendamentos([a]); });
+      });
+
+      aoEnviar("#form-agenda", (form) => {
+        const v = valores(form);
+        executar(
+          () => chamar("GET", "/profissionais/" + v.profissionalId + "/agenda" + consulta({ data: v.data })),
+          (agenda) => {
+            if (!agenda.expediente) { aviso(agenda.mensagem || "Não há expediente nesse dia.", "ok"); return; }
+            aviso("Agenda de " + agenda.data + ": " + agenda.agendamentos.length + " agendamento(s).", "ok");
+            mostrarAgendamentos(agenda.agendamentos);
+          });
+      });
+
+      aoEnviar("#form-historico", (form) => {
+        const v = valores(form);
+        executar(
+          () => chamar("GET", "/pacientes/" + v.pacienteId + "/agendamentos" + consulta({ status: v.status, de: v.de, ate: v.ate })),
+          (lista) => { aviso(lista.length + " agendamento(s) no histórico.", "ok"); mostrarAgendamentos(lista); });
+      });
+
+      $("#ver-faltas").addEventListener("click", () => {
+        const id = valores($("#form-historico")).pacienteId;
+        if (!id) { aviso("Informe o id do paciente.", "erro"); return; }
+        executar(
+          () => chamar("GET", "/pacientes/" + id + "/faltas"),
+          (s) => {
+            aviso(s.nome + ": " + s.faltasVigentes + " falta(s) vigente(s)" + (s.bloqueado ? " — PACIENTE BLOQUEADO." : "."),
+                  s.bloqueado ? "erro" : "ok");
+            mostrarJson(s);
+          });
+      });
+
+      // ---------- ações sobre um agendamento ----------
+      const acoes = {
+        cancelar:   (id) => chamar("POST", "/agendamentos/" + id + "/cancelamento"),
+        falta:      (id) => chamar("POST", "/agendamentos/" + id + "/falta"),
+        realizacao: (id) => chamar("POST", "/agendamentos/" + id + "/realizacao"),
+        remarcar:   (id, v) => chamar("PUT", "/agendamentos/" + id + "/periodo",
+                      { inicio: dataHora(v.novoInicio), fim: dataHora(v.novoFim) }),
+        adicionar:  (id, v) => chamar("POST", "/agendamentos/" + id + "/procedimentos",
+                      { procedimentoId: Number(v.procedimentoId) }),
+        remover:    (id, v) => chamar("DELETE", "/agendamentos/" + id + "/procedimentos/" + v.procedimentoId),
+        executar:   (id, v) => chamar("POST", "/agendamentos/" + id + "/procedimentos/" + v.procedimentoId + "/execucao")
+      };
+      document.querySelectorAll("#form-acoes button[data-acao]").forEach((botao) => {
+        botao.addEventListener("click", () => {
+          const v = valores($("#form-acoes"));
+          const acao = botao.dataset.acao;
+          if (!v.id) { aviso("Informe o id do agendamento.", "erro"); return; }
+          if ((acao === "remarcar") && (!v.novoInicio || !v.novoFim)) { aviso("Informe o novo início e o novo fim.", "erro"); return; }
+          if (["adicionar", "remover", "executar"].includes(acao) && !v.procedimentoId) { aviso("Informe o id do procedimento.", "erro"); return; }
+          executar(() => acoes[acao](v.id, v),
+            (a) => { aviso("Ação concluída. Status: " + a.statusRotulo + ".", "ok"); mostrarAgendamentos([a]); });
+        });
+      });
+
+      atualizarTela();
+    })();
+</script>
+</body>
+</html>
