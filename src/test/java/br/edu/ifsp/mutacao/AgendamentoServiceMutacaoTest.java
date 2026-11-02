@@ -28,4 +28,14 @@ class AgendamentoServiceMutacaoTest extends TesteBase {
         assertNotNull(retorno);
         assertEquals(List.of(consulta.getId(), hemograma.getId()), retorno.getProcedimentoIds());
     }
+    @Test
+    @DisplayName("AgendamentoService:132 - removerProcedimento devolve o agendamento atualizado (replaced return value with null)")
+    void removerProcedimentoDevolveOAgendamentoAtualizado() {
+        Agendamento ag = agendar(maria, PROFISSIONAL_A, meiaHora(QUARTA, 10, 0), consulta, hemograma);
+
+        Agendamento retorno = agendamentoService.removerProcedimento(ag.getId(), hemograma.getId());
+
+        assertNotNull(retorno);
+        assertEquals(List.of(consulta.getId()), retorno.getProcedimentoIds());
+    }
 }
