@@ -38,4 +38,15 @@ class AgendamentoServiceMutacaoTest extends TesteBase {
         assertNotNull(retorno);
         assertEquals(List.of(consulta.getId()), retorno.getProcedimentoIds());
     }
+
+    @Test
+    @DisplayName("AgendamentoService:139 - marcarProcedimentoComoExecutado devolve o agendamento atualizado (replaced return value with null)")
+    void marcarProcedimentoComoExecutadoDevolveOAgendamentoAtualizado() {
+        Agendamento ag = agendar(maria, PROFISSIONAL_A, meiaHora(QUARTA, 10, 0), consulta);
+
+        Agendamento retorno = agendamentoService.marcarProcedimentoComoExecutado(ag.getId(), consulta.getId());
+
+        assertNotNull(retorno);
+        assertTrue(retorno.getProcedimentos().get(0).isExecutado());
+    }
 }
