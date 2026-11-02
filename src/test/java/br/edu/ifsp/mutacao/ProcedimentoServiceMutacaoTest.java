@@ -29,4 +29,15 @@ class ProcedimentoServiceMutacaoTest {
         assertEquals("Raio-X", cadastrado.getNome());
         assertTrue(repositorio.existePorId(cadastrado.getId()));
     }
+
+    @Test
+    @DisplayName("ProcedimentoService:25 - listar devolve os procedimentos cadastrados (replaced return value with emptyList)")
+    void listarDevolveOsProcedimentosCadastrados() {
+        servico.cadastrar("Raio-X");
+        servico.cadastrar("Ultrassom");
+
+        List<String> nomes = servico.listar().stream().map(Procedimento::getNome).toList();
+
+        assertEquals(List.of("Raio-X", "Ultrassom"), nomes);
+    }
 }
