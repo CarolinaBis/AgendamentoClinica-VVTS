@@ -40,6 +40,5 @@ O Vercel serve apenas o front-end (site estático). Ele **não executa o Spring 
 
 ### Ligar ao back-end
 
-- **Com back-end público:** renomeie `vercel.json.exemplo` para `vercel.json`, troque `SEU-BACKEND.exemplo.com` pelo endereço do back-end e faça `push`. O Vercel repassa as chamadas `/api/v1/...` ao back-end, então a página continua chamando o próprio endereço e **não é preciso configurar CORS**.
 - **Sem back-end público:** a página abre, mas *Registrar* e *Entrar* mostram "O servidor da API não respondeu". Para usar o sistema, rode o back-end local e abra http://localhost:8080/.
 
