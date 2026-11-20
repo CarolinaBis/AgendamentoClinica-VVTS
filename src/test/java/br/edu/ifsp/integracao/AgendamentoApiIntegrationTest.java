@@ -353,6 +353,55 @@ class AgendamentoApiIntegrationTest {
                 .andExpect(jsonPath("$.procedimentos[0].executado").value(true));
     }
 
+    @Test
+    void deveRegistrarFaltaERetornar409SeHorarioAindaNaoFoiAtingido() throws Exception {
+        MvcResult resultadoPassado = mockMvc.perform(post("/api/v1/agendamentos")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "pacienteId": %d,
+                                  "profissionalId": 10,
+                                  "inicio": "2099-01-05T09:00:00",
+                                  "fim": "2099-01-05T09:30:00",
+                                  "procedimentoIds": [%d]
+                                }
+                                """.formatted(pacienteId, procedimentoId)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        long agendamentoPassadoId = ((Number) JsonPath.read(
+                resultadoPassado.getResponse().getContentAsString(), "$.id")).longValue();
+        jdbc.update("UPDATE agendamento SET inicio = ?, fim = ? WHERE id = ?",
+                "2020-01-05T09:00:00", "2020-01-05T09:30:00", agendamentoPassadoId);
+
+        mockMvc.perform(post("/api/v1/agendamentos/{id}/falta", agendamentoPassadoId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(agendamentoPassadoId))
+                .andExpect(jsonPath("$.pacienteId").value(pacienteId))
+                .andExpect(jsonPath("$.status").value("NAO_COMPARECEU"))
+                .andExpect(jsonPath("$.procedimentos[0].procedimentoId").value(procedimentoId));
+
+        MvcResult resultadoFuturo = mockMvc.perform(post("/api/v1/agendamentos")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "pacienteId": %d,
+                                  "profissionalId": 10,
+                                  "inicio": "2099-01-05T10:00:00",
+                                  "fim": "2099-01-05T10:30:00",
+                                  "procedimentoIds": [%d]
+                                }
+                                """.formatted(pacienteId, procedimentoId)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        long agendamentoFuturoId = ((Number) JsonPath.read(
+                resultadoFuturo.getResponse().getContentAsString(), "$.id")).longValue();
+
+        mockMvc.perform(post("/api/v1/agendamentos/{id}/falta", agendamentoFuturoId))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value("CONFLICT"));
+    }
+
     private long inserirPaciente() {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
