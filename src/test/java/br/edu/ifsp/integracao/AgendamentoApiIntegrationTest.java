@@ -39,6 +39,7 @@ class AgendamentoApiIntegrationTest {
 
     private long pacienteId;
     private long procedimentoId;
+    private long segundoProcedimentoId;
 
     @BeforeEach
     void configurarBanco() {
@@ -49,7 +50,8 @@ class AgendamentoApiIntegrationTest {
         jdbc.update("DELETE FROM paciente");
 
         pacienteId = inserirPaciente();
-        procedimentoId = inserirProcedimento();
+        procedimentoId = inserirProcedimento("Consulta clinica");
+        segundoProcedimentoId = inserirProcedimento("Hemograma");
     }
 
     @Test
@@ -201,6 +203,48 @@ class AgendamentoApiIntegrationTest {
                 .andExpect(jsonPath("$.status").value("CONFLICT"));
     }
 
+    @Test
+    void deveAdicionarProcedimentoERetornar409QuandoDuplicado() throws Exception {
+        MvcResult resultado = mockMvc.perform(post("/api/v1/agendamentos")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "pacienteId": %d,
+                                  "profissionalId": 10,
+                                  "inicio": "2099-01-05T09:00:00",
+                                  "fim": "2099-01-05T09:30:00",
+                                  "procedimentoIds": [%d]
+                                }
+                                """.formatted(pacienteId, procedimentoId)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        long agendamentoId = ((Number) JsonPath.read(
+                resultado.getResponse().getContentAsString(), "$.id")).longValue();
+
+        mockMvc.perform(post("/api/v1/agendamentos/{id}/procedimentos", agendamentoId)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {"procedimentoId": %d}
+                                """.formatted(segundoProcedimentoId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(agendamentoId))
+                .andExpect(jsonPath("$.pacienteId").value(pacienteId))
+                .andExpect(jsonPath("$.profissionalId").value(10))
+                .andExpect(jsonPath("$.status").value("CONFIRMADO"))
+                .andExpect(jsonPath("$.procedimentos.length()").value(2))
+                .andExpect(jsonPath("$.procedimentos[0].procedimentoId").value(procedimentoId))
+                .andExpect(jsonPath("$.procedimentos[1].procedimentoId").value(segundoProcedimentoId));
+
+        mockMvc.perform(post("/api/v1/agendamentos/{id}/procedimentos", agendamentoId)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {"procedimentoId": %d}
+                                """.formatted(segundoProcedimentoId)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value("CONFLICT"));
+    }
+
     private long inserirPaciente() {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
@@ -212,12 +256,12 @@ class AgendamentoApiIntegrationTest {
         return keyHolder.getKey().longValue();
     }
 
-    private long inserirProcedimento() {
+    private long inserirProcedimento(String nome) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
             PreparedStatement statement = connection.prepareStatement(
                     "INSERT INTO procedimento (nome) VALUES (?)", Statement.RETURN_GENERATED_KEYS);
-            statement.setString(1, "Consulta clinica");
+            statement.setString(1, nome);
             return statement;
         }, keyHolder);
         return keyHolder.getKey().longValue();
