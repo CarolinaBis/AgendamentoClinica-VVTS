@@ -11,11 +11,14 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import com.jayway.jsonpath.JsonPath;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -81,6 +84,38 @@ class AgendamentoApiIntegrationTest {
                                 """.formatted(pacienteId, procedimentoId)))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.status").value("UNPROCESSABLE_ENTITY"));
+    }
+
+    @Test
+    void deveBuscarAgendamentoERetornar404QuandoInexistente() throws Exception {
+        MvcResult resultado = mockMvc.perform(post("/api/v1/agendamentos")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "pacienteId": %d,
+                                  "profissionalId": 10,
+                                  "inicio": "2099-01-05T09:00:00",
+                                  "fim": "2099-01-05T09:30:00",
+                                  "procedimentoIds": [%d]
+                                }
+                                """.formatted(pacienteId, procedimentoId)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        long agendamentoId = ((Number) JsonPath.read(
+                resultado.getResponse().getContentAsString(), "$.id")).longValue();
+
+        mockMvc.perform(get("/api/v1/agendamentos/{id}", agendamentoId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(agendamentoId))
+                .andExpect(jsonPath("$.pacienteId").value(pacienteId))
+                .andExpect(jsonPath("$.profissionalId").value(10))
+                .andExpect(jsonPath("$.status").value("CONFIRMADO"))
+                .andExpect(jsonPath("$.procedimentos[0].procedimentoId").value(procedimentoId));
+
+        mockMvc.perform(get("/api/v1/agendamentos/{id}", agendamentoId + 1))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value("NOT_FOUND"));
     }
 
     private long inserirPaciente() {
