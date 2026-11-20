@@ -167,6 +167,40 @@ class AgendamentoApiIntegrationTest {
                 .andExpect(jsonPath("$.status").value("UNPROCESSABLE_ENTITY"));
     }
 
+    @Test
+    void deveCancelarAgendamentoERetornar409AoCancelarNovamente() throws Exception {
+        MvcResult resultado = mockMvc.perform(post("/api/v1/agendamentos")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "pacienteId": %d,
+                                  "profissionalId": 10,
+                                  "inicio": "2099-01-05T09:00:00",
+                                  "fim": "2099-01-05T09:30:00",
+                                  "procedimentoIds": [%d]
+                                }
+                                """.formatted(pacienteId, procedimentoId)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        long agendamentoId = ((Number) JsonPath.read(
+                resultado.getResponse().getContentAsString(), "$.id")).longValue();
+
+        mockMvc.perform(post("/api/v1/agendamentos/{id}/cancelamento", agendamentoId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(agendamentoId))
+                .andExpect(jsonPath("$.pacienteId").value(pacienteId))
+                .andExpect(jsonPath("$.profissionalId").value(10))
+                .andExpect(jsonPath("$.inicio").value("2099-01-05T09:00:00"))
+                .andExpect(jsonPath("$.fim").value("2099-01-05T09:30:00"))
+                .andExpect(jsonPath("$.status").value("CANCELADO"))
+                .andExpect(jsonPath("$.procedimentos[0].procedimentoId").value(procedimentoId));
+
+        mockMvc.perform(post("/api/v1/agendamentos/{id}/cancelamento", agendamentoId))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value("CONFLICT"));
+    }
+
     private long inserirPaciente() {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
