@@ -1,5 +1,6 @@
 package br.edu.ifsp.integracao;
 
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,6 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import com.jayway.jsonpath.JsonPath;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -20,6 +20,7 @@ import java.sql.Statement;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -116,6 +117,54 @@ class AgendamentoApiIntegrationTest {
         mockMvc.perform(get("/api/v1/agendamentos/{id}", agendamentoId + 1))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value("NOT_FOUND"));
+    }
+
+    @Test
+    void deveRemarcarComPeriodoValidoERetornar422ParaPeriodoInvalido() throws Exception {
+        MvcResult resultado = mockMvc.perform(post("/api/v1/agendamentos")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "pacienteId": %d,
+                                  "profissionalId": 10,
+                                  "inicio": "2099-01-05T09:00:00",
+                                  "fim": "2099-01-05T09:30:00",
+                                  "procedimentoIds": [%d]
+                                }
+                                """.formatted(pacienteId, procedimentoId)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        long agendamentoId = ((Number) JsonPath.read(
+                resultado.getResponse().getContentAsString(), "$.id")).longValue();
+
+        mockMvc.perform(put("/api/v1/agendamentos/{id}/periodo", agendamentoId)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "inicio": "2099-01-05T11:00:00",
+                                  "fim": "2099-01-05T11:30:00"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(agendamentoId))
+                .andExpect(jsonPath("$.pacienteId").value(pacienteId))
+                .andExpect(jsonPath("$.profissionalId").value(10))
+                .andExpect(jsonPath("$.inicio").value("2099-01-05T11:00:00"))
+                .andExpect(jsonPath("$.fim").value("2099-01-05T11:30:00"))
+                .andExpect(jsonPath("$.status").value("CONFIRMADO"))
+                .andExpect(jsonPath("$.procedimentos[0].procedimentoId").value(procedimentoId));
+
+        mockMvc.perform(put("/api/v1/agendamentos/{id}/periodo", agendamentoId)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "inicio": "2020-01-05T11:00:00",
+                                  "fim": "2020-01-05T11:30:00"
+                                }
+                                """))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.status").value("UNPROCESSABLE_ENTITY"));
     }
 
     private long inserirPaciente() {
