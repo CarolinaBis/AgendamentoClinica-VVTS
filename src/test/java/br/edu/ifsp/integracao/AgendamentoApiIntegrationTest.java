@@ -18,6 +18,7 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -241,6 +242,39 @@ class AgendamentoApiIntegrationTest {
                         .content("""
                                 {"procedimentoId": %d}
                                 """.formatted(segundoProcedimentoId)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value("CONFLICT"));
+    }
+
+    @Test
+    void deveRemoverProcedimentoERetornar409AoRemoverUltimo() throws Exception {
+        MvcResult resultado = mockMvc.perform(post("/api/v1/agendamentos")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "pacienteId": %d,
+                                  "profissionalId": 10,
+                                  "inicio": "2099-01-05T09:00:00",
+                                  "fim": "2099-01-05T09:30:00",
+                                  "procedimentoIds": [%d, %d]
+                                }
+                                """.formatted(pacienteId, procedimentoId, segundoProcedimentoId)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        long agendamentoId = ((Number) JsonPath.read(
+                resultado.getResponse().getContentAsString(), "$.id")).longValue();
+
+        mockMvc.perform(delete("/api/v1/agendamentos/{id}/procedimentos/{procedimentoId}",
+                        agendamentoId, segundoProcedimentoId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(agendamentoId))
+                .andExpect(jsonPath("$.status").value("CONFIRMADO"))
+                .andExpect(jsonPath("$.procedimentos.length()").value(1))
+                .andExpect(jsonPath("$.procedimentos[0].procedimentoId").value(procedimentoId));
+
+        mockMvc.perform(delete("/api/v1/agendamentos/{id}/procedimentos/{procedimentoId}",
+                        agendamentoId, procedimentoId))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value("CONFLICT"));
     }
