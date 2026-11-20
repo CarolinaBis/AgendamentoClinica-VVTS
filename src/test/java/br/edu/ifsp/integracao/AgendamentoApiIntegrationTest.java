@@ -312,6 +312,47 @@ class AgendamentoApiIntegrationTest {
                 .andExpect(jsonPath("$.status").value("NOT_FOUND"));
     }
 
+    @Test
+    void deveConfirmarRealizacaoERetornar409EnquantoHaProcedimentosPendentes() throws Exception {
+        MvcResult resultado = mockMvc.perform(post("/api/v1/agendamentos")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "pacienteId": %d,
+                                  "profissionalId": 10,
+                                  "inicio": "2099-01-05T09:00:00",
+                                  "fim": "2099-01-05T09:30:00",
+                                  "procedimentoIds": [%d]
+                                }
+                                """.formatted(pacienteId, procedimentoId)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        long agendamentoId = ((Number) JsonPath.read(
+                resultado.getResponse().getContentAsString(), "$.id")).longValue();
+        jdbc.update("UPDATE agendamento SET inicio = ?, fim = ? WHERE id = ?",
+                "2020-01-05T09:00:00", "2020-01-05T09:30:00", agendamentoId);
+
+        mockMvc.perform(post("/api/v1/agendamentos/{id}/realizacao", agendamentoId))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value("CONFLICT"));
+
+        jdbc.update("UPDATE agendamento_procedimento SET executado = 1 WHERE agendamento_id = ?",
+                agendamentoId);
+
+        mockMvc.perform(post("/api/v1/agendamentos/{id}/realizacao", agendamentoId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(agendamentoId))
+                .andExpect(jsonPath("$.pacienteId").value(pacienteId))
+                .andExpect(jsonPath("$.profissionalId").value(10))
+                .andExpect(jsonPath("$.inicio").value("2020-01-05T09:00:00"))
+                .andExpect(jsonPath("$.fim").value("2020-01-05T09:30:00"))
+                .andExpect(jsonPath("$.status").value("REALIZADO"))
+                .andExpect(jsonPath("$.realizadoEm").isNotEmpty())
+                .andExpect(jsonPath("$.procedimentos[0].procedimentoId").value(procedimentoId))
+                .andExpect(jsonPath("$.procedimentos[0].executado").value(true));
+    }
+
     private long inserirPaciente() {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
