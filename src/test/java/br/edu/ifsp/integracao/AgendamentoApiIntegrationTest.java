@@ -279,6 +279,39 @@ class AgendamentoApiIntegrationTest {
                 .andExpect(jsonPath("$.status").value("CONFLICT"));
     }
 
+    @Test
+    void deveExecutarProcedimentoERetornar404QuandoNaoPertencerAoAgendamento() throws Exception {
+        MvcResult resultado = mockMvc.perform(post("/api/v1/agendamentos")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "pacienteId": %d,
+                                  "profissionalId": 10,
+                                  "inicio": "2099-01-05T09:00:00",
+                                  "fim": "2099-01-05T09:30:00",
+                                  "procedimentoIds": [%d]
+                                }
+                                """.formatted(pacienteId, procedimentoId)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        long agendamentoId = ((Number) JsonPath.read(
+                resultado.getResponse().getContentAsString(), "$.id")).longValue();
+
+        mockMvc.perform(post("/api/v1/agendamentos/{id}/procedimentos/{procedimentoId}/execucao",
+                        agendamentoId, procedimentoId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(agendamentoId))
+                .andExpect(jsonPath("$.status").value("CONFIRMADO"))
+                .andExpect(jsonPath("$.procedimentos[0].procedimentoId").value(procedimentoId))
+                .andExpect(jsonPath("$.procedimentos[0].executado").value(true));
+
+        mockMvc.perform(post("/api/v1/agendamentos/{id}/procedimentos/{procedimentoId}/execucao",
+                        agendamentoId, segundoProcedimentoId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value("NOT_FOUND"));
+    }
+
     private long inserirPaciente() {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
