@@ -70,4 +70,11 @@ class PacienteApiIntegrationTest {
                 .andExpect(jsonPath("$.id").value(pacienteId))
                 .andExpect(jsonPath("$.nome").value("Maria da Silva"));
     }
+
+    @Test
+    void deveRetornar404AoBuscarPacienteInexistente() throws Exception {
+        mockMvc.perform(get("/api/v1/pacientes/{id}", 999999))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value("NOT_FOUND"));
+    }
 }
