@@ -8,9 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -98,5 +103,40 @@ class PacienteApiIntegrationTest {
         mockMvc.perform(get("/api/v1/pacientes/{id}/faltas", 999999))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value("NOT_FOUND"));
+    }
+
+    private long inserirProcedimento(String nome) {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbc.update(connection -> {
+            PreparedStatement statement = connection.prepareStatement(
+                    "INSERT INTO procedimento (nome) VALUES (?)", Statement.RETURN_GENERATED_KEYS);
+            statement.setString(1, nome);
+            return statement;
+        }, keyHolder);
+        return keyHolder.getKey().longValue();
+    }
+
+    private long criarAgendamentoNoDia(long pacienteId, long procedimentoId, String dia)
+            throws Exception {
+        return criarAgendamento(pacienteId, procedimentoId, dia + "T09:00:00", dia + "T09:30:00");
+    }
+
+    private long criarAgendamento(long pacienteId, long procedimentoId, String inicio, String fim)
+            throws Exception {
+        MvcResult resultado = mockMvc.perform(post("/api/v1/agendamentos")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                            {
+                              "pacienteId": %d,
+                              "profissionalId": 10,
+                              "inicio": "%s",
+                              "fim": "%s",
+                              "procedimentoIds": [%d]
+                            }
+                            """.formatted(pacienteId, inicio, fim, procedimentoId)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        return ((Number) JsonPath.read(
+                resultado.getResponse().getContentAsString(), "$.id")).longValue();
     }
 }
