@@ -35,4 +35,13 @@ class ProcedimentoPersistenciaTest extends PersistenciaTestBase {
 
         assertThat(resultado).isEmpty();
     }
+
+    @Test
+    @DisplayName("existePorId é verdadeiro para um procedimento salvo e falso para um id inexistente")
+    void existePorIdVerdadeParaSalvoEFalsoParaInexistente(){
+        Procedimento salvo = repositorio.salvar(new Procedimento(null, "Consulta clínica"));
+
+        assertThat(repositorio.existePorId(salvo.getId())).isTrue();
+        assertThat(repositorio.existePorId(99999L)).isFalse();
+    }
 }
