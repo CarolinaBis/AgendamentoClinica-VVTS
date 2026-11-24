@@ -159,4 +159,25 @@ class PacienteApiIntegrationTest {
         return ((Number) JsonPath.read(
                 resultado.getResponse().getContentAsString(), "$.id")).longValue();
     }
+
+    @Test
+    void deveFiltrarHistoricoDoPacientePorPeriodo() throws Exception {
+        long pacienteId = cadastrarPaciente("Maria da Silva");
+        long procedimentoId = inserirProcedimento("Consulta clinica");
+
+        long antesDoPeriodo = criarAgendamentoNoDia(pacienteId, procedimentoId, "2099-01-05");
+        long noInicioDoPeriodo = criarAgendamentoNoDia(pacienteId, procedimentoId, "2099-01-06");
+        long noFimDoPeriodo = criarAgendamentoNoDia(pacienteId, procedimentoId, "2099-01-07");
+        long depoisDoPeriodo = criarAgendamentoNoDia(pacienteId, procedimentoId, "2099-01-08");
+
+        mockMvc.perform(get("/api/v1/pacientes/{id}/agendamentos", pacienteId)
+                        .param("de", "2099-01-06")
+                        .param("ate", "2099-01-07"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[?(@.id == " + noInicioDoPeriodo + ")]").exists())
+                .andExpect(jsonPath("$[?(@.id == " + noFimDoPeriodo + ")]").exists())
+                .andExpect(jsonPath("$[?(@.id == " + antesDoPeriodo + ")]").isEmpty())
+                .andExpect(jsonPath("$[?(@.id == " + depoisDoPeriodo + ")]").isEmpty());
+    }
 }
