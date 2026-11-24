@@ -34,4 +34,11 @@ class PacientePersistenciaTest extends PersistenciaTestBase {
         assertThat(encontrado.getNome()).isEqualTo("Yasmim");
         assertThat(encontrado.getFaltas()).hasSize(2);
     }
+
+    @Test
+    @DisplayName("Buscar paciente com id nulo devolve vazio")
+    void buscarPacienteComIdNuloDevolveVazio(){
+        assertThat(repositorio.buscarPorId(null)).isEmpty();
+    }
+
 }
