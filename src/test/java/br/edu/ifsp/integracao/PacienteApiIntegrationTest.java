@@ -105,6 +105,26 @@ class PacienteApiIntegrationTest {
                 .andExpect(jsonPath("$.status").value("NOT_FOUND"));
     }
 
+    @Test
+    void deveFiltrarHistoricoDoPacientePorStatus() throws Exception {
+        long pacienteId = cadastrarPaciente("Maria da Silva");
+        long procedimentoId = inserirProcedimento("Consulta clinica");
+
+        criarAgendamentoNoDia(pacienteId, procedimentoId, "2099-01-05");
+        criarAgendamentoNoDia(pacienteId, procedimentoId, "2099-01-06");
+        long agendamentoCancelado = criarAgendamentoNoDia(pacienteId, procedimentoId, "2099-01-07");
+
+        mockMvc.perform(post("/api/v1/agendamentos/{id}/cancelamento", agendamentoCancelado))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/pacientes/{id}/agendamentos", pacienteId)
+                        .param("status", "confirmado"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[?(@.status == 'CONFIRMADO')]").exists())
+                .andExpect(jsonPath("$[?(@.status == 'CANCELADO')]").isEmpty());
+    }
+
     private long inserirProcedimento(String nome) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
