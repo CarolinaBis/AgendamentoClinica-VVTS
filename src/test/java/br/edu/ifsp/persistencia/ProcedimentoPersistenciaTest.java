@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("PersistenceTest")
@@ -24,5 +26,13 @@ class ProcedimentoPersistenciaTest extends PersistenciaTestBase {
         assertThat(salvo.getId()).isNotNull();
         assertThat(repositorio.buscarPorId(salvo.getId()))
                 .hasValueSatisfying(encontrado -> assertThat(encontrado.getNome()).isEqualTo("Consulta clínica"));
+    }
+
+    @Test
+    @DisplayName("Buscar um procedimento através de um id não existente e devolver vazio")
+    void buscarIdProcedimentoNaoExistente(){
+        Optional<Procedimento> resultado = repositorio.buscarPorId(99999L);
+
+        assertThat(resultado).isEmpty();
     }
 }
