@@ -9,6 +9,7 @@ import br.edu.ifsp.dominio.paciente.Paciente;
 import br.edu.ifsp.dominio.paciente.PacienteRepository;
 import br.edu.ifsp.dominio.procedimento.Procedimento;
 import br.edu.ifsp.dominio.procedimento.ProcedimentoRepository;
+import net.bytebuddy.asm.Advice;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,21 @@ class AgendamentoPersistenciaTest extends PersistenciaTestBase {
                 ),
                 null
         );
+    }
+
+    @Test
+    @DisplayName("Não salvar agendamento de um paciente inexistente")
+    void naoSalvarAgendamentoDePacienteInexistente(){
+        Procedimento consulta = procedimentoRepositorio.salvar(new Procedimento(null, "Consulta clínica"));
+        PeriodoAtendimento periodo = new PeriodoAtendimento(
+                LocalDateTime.of(2026,12,7,9,0), LocalDateTime.of(2026,12,7,10,0));
+
+        Agendamento agendamento = Agendamento.reconstituir(
+                null, 99999L, 10L, periodo, StatusAgendamento.CONFIRMADO,
+                List.of(ProcedimentoAgendado.pendente(consulta.getId())), null);
+
+        assertThatThrownBy(() -> agendamentoRepositorio.salvar(agendamento))
+                .isInstanceOf(DataAccessException.class);
     }
 
 }
