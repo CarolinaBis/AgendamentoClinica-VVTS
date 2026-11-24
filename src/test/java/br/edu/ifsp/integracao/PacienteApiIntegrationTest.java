@@ -54,16 +54,7 @@ class PacienteApiIntegrationTest {
 
     @Test
     void deveBuscarPacienteExistenteERetornarSeusDados() throws Exception {
-        MvcResult resultado = mockMvc.perform(post("/api/v1/pacientes")
-                        .contentType(APPLICATION_JSON)
-                        .content("""
-                                {"nome": "Maria da Silva"}
-                                """))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        long pacienteId = ((Number) JsonPath.read(
-                resultado.getResponse().getContentAsString(), "$.id")).longValue();
+        long pacienteId = cadastrarPaciente("Maria da Silva");
 
         mockMvc.perform(get("/api/v1/pacientes/{id}", pacienteId))
                 .andExpect(status().isOk())
