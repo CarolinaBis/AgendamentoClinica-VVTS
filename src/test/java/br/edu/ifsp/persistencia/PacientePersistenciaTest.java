@@ -41,4 +41,19 @@ class PacientePersistenciaTest extends PersistenciaTestBase {
         assertThat(repositorio.buscarPorId(null)).isEmpty();
     }
 
+    @Test
+    @DisplayName("Salvar o mesmo paciente novamente não duplica as faltas")
+    void salvarNovamenteNaoDuplicaFaltas() {
+        Paciente paciente = Paciente.novo("Ana");
+        paciente.registrarFalta(new Falta(1L, LocalDateTime.of(2026, 11, 10, 9, 0)));
+        paciente.registrarFalta(new Falta(2L, LocalDateTime.of(2026, 11, 12, 9, 0)));
+        Paciente salvo = repositorio.salvar(paciente);
+
+        repositorio.salvar(repositorio.buscarPorId(salvo.getId()).orElseThrow());
+
+        Integer totalDeFaltas = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM falta WHERE paciente_id = ?", Integer.class, salvo.getId());
+        assertThat(totalDeFaltas).isEqualTo(2);
+    }
+
 }
