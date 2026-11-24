@@ -92,4 +92,11 @@ class PacienteApiIntegrationTest {
         return ((Number) JsonPath.read(
                 resultado.getResponse().getContentAsString(), "$.id")).longValue();
     }
+
+    @Test
+    void deveRetornar404AoConsultarFaltasDePacienteInexistente() throws Exception {
+        mockMvc.perform(get("/api/v1/pacientes/{id}/faltas", 999999))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value("NOT_FOUND"));
+    }
 }
