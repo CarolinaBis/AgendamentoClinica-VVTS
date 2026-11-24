@@ -63,4 +63,18 @@ class ProcedimentoPersistenciaTest extends PersistenciaTestBase {
                 .contains("Raio-X", "Exame de Sangue");
     }
 
+    @Test
+    @DisplayName("Salvar um procedimento com id existente atualiza o nome sem criar outro")
+    void salvarComIdExistenteAtualizaSemDuplicar() {
+        Procedimento salvo = repositorio.salvar(new Procedimento(null, "Consulta"));
+
+        repositorio.salvar(new Procedimento(salvo.getId(), "Consulta clínica"));
+
+        assertThat(repositorio.listar())
+                .singleElement()
+                .extracting(Procedimento::getNome)
+                .isEqualTo("Consulta clínica");
+    }
+
+
 }
