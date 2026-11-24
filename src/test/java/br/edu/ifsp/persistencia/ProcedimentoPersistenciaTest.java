@@ -52,4 +52,15 @@ class ProcedimentoPersistenciaTest extends PersistenciaTestBase {
         assertThat(repositorio.existePorId(null)).isFalse();
     }
 
+    @Test
+    @DisplayName("listar devolve os procedimentos na ordem em que foram cadastrados")
+    void listarDevolveOsProcedimentosNaOrdemEmQueForamCadastrados(){
+        repositorio.salvar(new Procedimento(null, "Raio-X"));
+        repositorio.salvar(new Procedimento(null, "Exame de Sangue"));
+
+        assertThat(repositorio.listar())
+                .extracting(Procedimento::getNome)
+                .contains("Raio-X", "Exame de Sangue");
+    }
+
 }
