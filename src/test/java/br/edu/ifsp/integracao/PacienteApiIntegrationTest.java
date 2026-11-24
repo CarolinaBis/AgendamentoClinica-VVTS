@@ -57,8 +57,8 @@ class PacienteApiIntegrationTest {
         MvcResult resultado = mockMvc.perform(post("/api/v1/pacientes")
                         .contentType(APPLICATION_JSON)
                         .content("""
-                            {"nome": "Maria da Silva"}
-                            """))
+                                {"nome": "Maria da Silva"}
+                                """))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -76,5 +76,29 @@ class PacienteApiIntegrationTest {
         mockMvc.perform(get("/api/v1/pacientes/{id}", 999999))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value("NOT_FOUND"));
+    }
+
+    @Test
+    void deveConsultarSituacaoDePacienteSemFaltas() throws Exception {
+        long pacienteId = cadastrarPaciente("Maria da Silva");
+
+        mockMvc.perform(get("/api/v1/pacientes/{id}/faltas", pacienteId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pacienteId").value(pacienteId))
+                .andExpect(jsonPath("$.nome").value("Maria da Silva"))
+                .andExpect(jsonPath("$.faltasVigentes").value(0))
+                .andExpect(jsonPath("$.bloqueado").value(false));
+    }
+
+    private long cadastrarPaciente(String nome) throws Exception {
+        MvcResult resultado = mockMvc.perform(post("/api/v1/pacientes")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {"nome": "%s"}
+                                """.formatted(nome)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        return ((Number) JsonPath.read(
+                resultado.getResponse().getContentAsString(), "$.id")).longValue();
     }
 }
