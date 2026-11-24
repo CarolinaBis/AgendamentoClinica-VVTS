@@ -44,4 +44,12 @@ class ProcedimentoPersistenciaTest extends PersistenciaTestBase {
         assertThat(repositorio.existePorId(salvo.getId())).isTrue();
         assertThat(repositorio.existePorId(99999L)).isFalse();
     }
+
+    @Test
+    @DisplayName("existePorId devolve falso quando o id é nulo")
+    void existePorIdDevolveFalsoQuandoOIdENulo(){
+
+        assertThat(repositorio.existePorId(null)).isFalse();
+    }
+
 }
