@@ -1,5 +1,6 @@
 package br.edu.ifsp.integracao;
 
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -9,8 +10,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,6 +49,25 @@ class PacienteApiIntegrationTest {
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.nome").value("Maria da Silva"));
+    }
+
+    @Test
+    void deveBuscarPacienteExistenteERetornarSeusDados() throws Exception {
+        MvcResult resultado = mockMvc.perform(post("/api/v1/pacientes")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                            {"nome": "Maria da Silva"}
+                            """))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        long pacienteId = ((Number) JsonPath.read(
+                resultado.getResponse().getContentAsString(), "$.id")).longValue();
+
+        mockMvc.perform(get("/api/v1/pacientes/{id}", pacienteId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(pacienteId))
                 .andExpect(jsonPath("$.nome").value("Maria da Silva"));
     }
 }
