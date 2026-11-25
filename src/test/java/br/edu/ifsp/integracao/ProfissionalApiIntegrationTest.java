@@ -133,6 +133,18 @@ class ProfissionalApiIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void deveRetornarAgendaVaziaParaIdNegativo() throws Exception {
+        LocalDate dia = LocalDate.of(2026, 11, 26);
+
+        mockMvc.perform(get("/api/v1/profissionais/{id}/agenda", -1)
+                        .param("data", dia.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").value(dia.toString()))
+                .andExpect(jsonPath("$.expediente").value(true))
+                .andExpect(jsonPath("$.agendamentos.length()").value(0));
+    }
+
     private long inserirPaciente(String nome) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
