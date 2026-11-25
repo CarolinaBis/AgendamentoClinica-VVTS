@@ -80,8 +80,6 @@ class AgendamentoPersistenciaTest extends PersistenciaTestBase {
                 List.of(ProcedimentoAgendado.pendente(procedimentoId)), null);
     }
 
-
-
     @Test
     @DisplayName("Buscar por profissional devolve só os agendamentos dele, ordenados pelo início")
     void buscarPorProfissionalFiltraEOrdenaPeloInicio() {
@@ -99,4 +97,23 @@ class AgendamentoPersistenciaTest extends PersistenciaTestBase {
                 .extracting(agendamento -> agendamento.getPeriodo().inicio())
                 .containsExactly(manha, tarde);
     }
+
+    @Test
+    @DisplayName("Buscar por paciente devolve só os agendamentos daquele paciente")
+    void buscarPorPacienteDevolveSoOsDele() {
+        Paciente ana = pacienteRepositorio.salvar(Paciente.novo("Ana"));
+        Paciente bruno = pacienteRepositorio.salvar(Paciente.novo("Bruno"));
+        Procedimento consulta = procedimentoRepositorio.salvar(new Procedimento(null, "Consulta clínica"));
+        LocalDateTime inicio = LocalDateTime.of(2026, 12, 7, 9, 0);
+        agendamentoRepositorio.salvar(novoAgendamento(ana.getId(), 10L, inicio, consulta.getId()));
+        agendamentoRepositorio.salvar(novoAgendamento(bruno.getId(), 20L, inicio, consulta.getId()));
+
+        List<Agendamento> agendamentosDaAna = agendamentoRepositorio.buscarPorPaciente(ana.getId());
+
+        assertThat(agendamentosDaAna)
+                .singleElement()
+                .extracting(Agendamento::getPacienteId)
+                .isEqualTo(ana.getId());
+    }
+
 }
