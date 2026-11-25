@@ -115,4 +115,9 @@ class JdbcProcedimentoRepositoryPersistenceTest {
         assertEquals(3L, listados.get(2).getId());
         assertEquals("Canal", listados.get(2).getNome());
     }
+
+    @Test
+    void deveRetornarVazioAoBuscarProcedimentoComIdNulo() {
+        assertTrue(procedimentos.buscarPorId(null).isEmpty());
+    }
 }
