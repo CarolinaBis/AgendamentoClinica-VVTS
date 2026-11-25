@@ -34,6 +34,10 @@ public abstract class BasePage {
         return classe != null && classe.contains("erro");
     }
 
+    public void aguardarErro() {
+        espera.until(ExpectedConditions.attributeContains(AVISO, "class", "erro"));
+    }
+
     protected void preencher(By campo, String valor) {
         WebElement elemento = driver.findElement(campo);
         elemento.clear();
