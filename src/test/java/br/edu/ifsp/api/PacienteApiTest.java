@@ -41,4 +41,20 @@ class PacienteApiTest extends ApiTestBase {
                 .statusCode(400)
                 .body("message", equalTo("O nome do paciente é obrigatório."));
     }
+
+    @Test
+    @DisplayName("GET /pacientes/{id} de um paciente existente devolve 200 com os dados")
+    void buscarPacienteExistenteDevolve200(){
+        String nome = faker.name().fullName();
+        long id = criarPaciente(nome);
+
+        comToken()
+                .when()
+                .get("/pacientes/{id}", id)
+
+                .then()
+                .statusCode(200)
+                .body("id", equalTo((int) id))
+                .body("nome", equalTo(nome));
+    }
 }
