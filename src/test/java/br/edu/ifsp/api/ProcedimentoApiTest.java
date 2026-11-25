@@ -8,6 +8,7 @@ import java.util.Map;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.contains;
 
 @Tag("ApiTest")
 @Tag("IntegrationTest")
@@ -24,5 +25,19 @@ class ProcedimentoApiTest extends ApiTestBase {
                 .statusCode(201)
                 .body("id", notNullValue())
                 .body("nome", equalTo("Consulta clínica"));
+    }
+
+    @Test
+    @DisplayName("GET /procedimentos devolve 200 com os procedimentos cadastrados")
+    void listarProcedimentosDevolve200() {
+        criarProcedimento("Consulta clínica");
+        criarProcedimento("Exame de sangue");
+
+        comToken()
+                .when()
+                .get("/procedimentos")
+                .then()
+                .statusCode(200)
+                .body("nome", contains("Consulta clínica", "Exame de sangue"));
     }
 }
