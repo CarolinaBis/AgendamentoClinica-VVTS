@@ -203,4 +203,18 @@ class AgendamentoRepositoryPersistenceTest {
     void deveRetornarVazioAoBuscarAgendamentoInexistente() {
         assertTrue(agendamentos.buscarPorId(Long.MAX_VALUE).isEmpty());
     }
+
+    @Test
+    void deveRejeitarAgendamentoDePacienteInexistente() {
+        LocalDateTime inicio = LocalDateTime.of(2099, 6, 20, 9, 0);
+        Agendamento agendamento = Agendamento.reconstituir(null, Long.MAX_VALUE, 42L,
+                new PeriodoAtendimento(inicio, inicio.plusMinutes(30)),
+                StatusAgendamento.CONFIRMADO, List.of(), null);
+
+        UncategorizedSQLException erro = assertThrows(UncategorizedSQLException.class,
+                () -> agendamentos.salvar(agendamento));
+
+        assertTrue(erro.getSQLException().getMessage().contains("FOREIGN KEY constraint failed"));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM agendamento", Integer.class));
+    }
 }
