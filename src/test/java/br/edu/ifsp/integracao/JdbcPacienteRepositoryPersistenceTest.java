@@ -98,4 +98,27 @@ class JdbcPacienteRepositoryPersistenceTest {
         assertEquals("Ana Souza", recuperado.getNome());
         assertTrue(recuperado.getFaltas().isEmpty());
     }
+
+    @Test
+    void deveRecuperarPacienteComFaltas() {
+        Long pacienteId = 124L;
+        jdbc.update("INSERT INTO paciente (id, nome) VALUES (?, ?)", pacienteId, "Beatriz Costa");
+        jdbc.update("""
+                INSERT INTO falta (paciente_id, agendamento_id, data_referencia)
+                VALUES (?, ?, ?)
+                """, pacienteId, 20L, "2026-11-24T09:00");
+        jdbc.update("""
+                INSERT INTO falta (paciente_id, agendamento_id, data_referencia)
+                VALUES (?, ?, ?)
+                """, pacienteId, 30L, "2026-11-25T09:00");
+
+        Paciente recuperado = pacientes.buscarPorId(pacienteId).orElseThrow();
+
+        assertEquals(pacienteId, recuperado.getId());
+        assertEquals("Beatriz Costa", recuperado.getNome());
+        assertEquals(List.of(
+                new Falta(20L, LocalDateTime.of(2026, 11, 24, 9, 0)),
+                new Falta(30L, LocalDateTime.of(2026, 11, 25, 9, 0))),
+                recuperado.getFaltas());
+    }
 }
