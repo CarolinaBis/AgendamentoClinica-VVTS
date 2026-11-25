@@ -73,4 +73,11 @@ class JdbcProcedimentoRepositoryPersistenceTest {
     void deveRetornarVazioAoBuscarProcedimentoInexistente() {
         assertTrue(procedimentos.buscarPorId(Long.MAX_VALUE).isEmpty());
     }
+
+    @Test
+    void deveIndicarQueProcedimentoExistePorId() {
+        jdbc.update("INSERT INTO procedimento (id, nome) VALUES (?, ?)", 70L, "Retorno");
+
+        assertTrue(procedimentos.existePorId(70L));
+    }
 }
