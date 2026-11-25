@@ -30,7 +30,16 @@ class UsuarioPersistenciaTest extends PersistenciaTestBase {
                 .isInstanceOf(DataAccessException.class);
     }
 
+    @Test
+    @DisplayName("Salva o usuário e o encontra pelo e-mail")
+    void salvaOUsuarioEEncontraPeloEmail(){
+        repositorio.save(novoUsuario("yasmim@email.com"));
+
+        assertThat(repositorio.findByEmail("yasmim@email.com"))
+                .hasValueSatisfying(usuario -> assertThat(usuario.getName()).isEqualTo("Yasmim"));
+    }
+
     private User novoUsuario(String email) {
-        return new User(UUID.randomUUID(), "Ana", "Silva", email, "senha-codificada", Role.USER);
+        return new User(UUID.randomUUID(), "Yasmim", "Assis", email, "senha-codificada", Role.USER);
     }
 }
