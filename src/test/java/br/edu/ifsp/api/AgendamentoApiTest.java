@@ -45,6 +45,19 @@ class AgendamentoApiTest extends ApiTestBase {
                 .body("status", equalTo("UNPROCESSABLE_ENTITY"));
     }
 
+    @Test
+    @DisplayName("POST /agendamentos para um paciente inexistente devolve 404")
+    void agendarParaPacienteInexistenteDevolve404() {
+        long procedimentoId = criarProcedimento("Consulta clínica");
+
+        comToken()
+                .body(dadosDeAgendamento(99999L, 10L, proximaSegundaAs(9), procedimentoId))
+                .when()
+                .post("/agendamentos")
+                .then()
+                .statusCode(404);
+    }
+
     private long criarAgendamento() {
         long pacienteId = criarPaciente(faker.name().fullName());
         long procedimentoId = criarProcedimento("Consulta clínica");
