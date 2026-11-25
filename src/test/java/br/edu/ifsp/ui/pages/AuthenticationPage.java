@@ -43,14 +43,22 @@ public class AuthenticationPage {
     }
 
     public void register(String name, String lastname, String email, String password) {
+        submitRegistration(name, lastname, email, password);
+        wait.until(ExpectedConditions.textToBe(
+                NOTICE, "Usuário criado. Agora entre com o seu e-mail e senha."));
+    }
+
+    public void submitRegistration(String name, String lastname, String email, String password) {
         driver.findElement(By.cssSelector("#form-registrar [name='name']")).sendKeys(name);
         driver.findElement(By.cssSelector("#form-registrar [name='lastname']")).sendKeys(lastname);
         driver.findElement(By.cssSelector("#form-registrar [name='email']")).sendKeys(email);
         driver.findElement(By.cssSelector("#form-registrar [name='password']")).sendKeys(password);
         driver.findElement(By.id("btn-registrar")).click();
+    }
 
-        wait.until(ExpectedConditions.textToBe(
-                NOTICE, "Usuário criado. Agora entre com o seu e-mail e senha."));
+    public boolean isRegistrationEmailInvalid() {
+        return !driver.findElements(
+                By.cssSelector("#form-registrar input[name='email']:invalid")).isEmpty();
     }
 
     public void login(String email, String password) {

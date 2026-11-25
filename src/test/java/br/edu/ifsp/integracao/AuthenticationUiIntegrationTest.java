@@ -79,4 +79,17 @@ class AuthenticationUiIntegrationTest {
         assertFalse(authenticationPage.isApplicationVisible());
         assertEquals("E-mail ou senha inválidos.", authenticationPage.getNotice());
     }
+
+    @Test
+    void deveBloquearCadastroComEmailEmFormatoInvalido() {
+        String avisoInicial = authenticationPage.getNotice();
+        authenticationPage.submitRegistration(
+                faker.name().firstName(), faker.name().lastName(),
+                "email-invalido", faker.internet().password());
+
+        assertTrue(authenticationPage.isRegistrationEmailInvalid());
+        assertTrue(authenticationPage.isLoginFormVisible());
+        assertFalse(authenticationPage.isApplicationVisible());
+        assertEquals(avisoInicial, authenticationPage.getNotice());
+    }
 }
