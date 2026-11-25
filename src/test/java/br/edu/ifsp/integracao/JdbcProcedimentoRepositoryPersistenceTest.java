@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -95,5 +97,22 @@ class JdbcProcedimentoRepositoryPersistenceTest {
     @Test
     void deveListarVazioQuandoNaoHaProcedimentos() {
         assertTrue(procedimentos.listar().isEmpty());
+    }
+
+    @Test
+    void deveListarProcedimentosOrdenadosPorId() {
+        jdbc.update("INSERT INTO procedimento (id, nome) VALUES (?, ?)", 3L, "Canal");
+        jdbc.update("INSERT INTO procedimento (id, nome) VALUES (?, ?)", 1L, "Consulta");
+        jdbc.update("INSERT INTO procedimento (id, nome) VALUES (?, ?)", 2L, "Retorno");
+
+        List<Procedimento> listados = procedimentos.listar();
+
+        assertEquals(3, listados.size());
+        assertEquals(1L, listados.get(0).getId());
+        assertEquals("Consulta", listados.get(0).getNome());
+        assertEquals(2L, listados.get(1).getId());
+        assertEquals("Retorno", listados.get(1).getNome());
+        assertEquals(3L, listados.get(2).getId());
+        assertEquals("Canal", listados.get(2).getNome());
     }
 }
