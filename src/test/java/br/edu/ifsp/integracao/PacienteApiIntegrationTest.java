@@ -58,6 +58,20 @@ class PacienteApiIntegrationTest {
     }
 
     @Test
+    void deveRetornar400AoCadastrarPacienteComNomeEmBranco() throws Exception {
+        mockMvc.perform(post("/api/v1/pacientes")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {"nome": "   "}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.message").value("O nome do paciente é obrigatório."))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage").value("java.lang.IllegalArgumentException"));
+    }
+
+    @Test
     void deveBuscarPacienteExistenteERetornarSeusDados() throws Exception {
         long pacienteId = cadastrarPaciente("Maria da Silva");
 
