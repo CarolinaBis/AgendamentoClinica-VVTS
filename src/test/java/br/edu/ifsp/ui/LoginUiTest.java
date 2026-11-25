@@ -21,4 +21,17 @@ class LoginUiTest extends UiTestBase {
         login.aguardarAviso("Usuário criado. Agora entre com o seu e-mail e senha.");
         assertThat(login.avisoEhDeErro()).isFalse();
     }
+
+    @Test
+    @DisplayName("Registrar com campos vazios é bloqueado pelo navegador e não envia nada")
+    void registrarComCamposVaziosEBloqueado() {
+        LoginPage login = abrirSistema();
+
+        login.registrar("", "", "", "");
+
+        assertThat(login.formularioDeRegistroEstaValido()).isFalse();
+        assertThat(login.textoDoAviso()).isEqualTo("Entre ou registre um usuário para começar.");
+    }
+
+
 }

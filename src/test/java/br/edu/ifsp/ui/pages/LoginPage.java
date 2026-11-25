@@ -26,4 +26,9 @@ public class LoginPage extends BasePage {
     public boolean estaVisivel() {
         return driver.findElement(By.id("tela-login")).isDisplayed();
     }
+
+    public boolean formularioDeRegistroEstaValido() {
+        return (Boolean) ((org.openqa.selenium.JavascriptExecutor) driver).executeScript(
+                "return document.getElementById('form-registrar').checkValidity();");
+    }
 }
