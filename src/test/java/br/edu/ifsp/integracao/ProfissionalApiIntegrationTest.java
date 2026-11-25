@@ -14,7 +14,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -100,6 +102,22 @@ class ProfissionalApiIntegrationTest {
                 .andExpect(jsonPath("$.mensagem").value("Não há expediente nesse dia."))
                 .andExpect(jsonPath("$.agendamentos").isArray())
                 .andExpect(jsonPath("$.agendamentos.length()").value(0));
+    }
+
+    @Test
+    void deveUsarDataAtualQuandoParametroDataForOmitido() throws Exception {
+        LocalDate hoje = LocalDate.now(ZoneId.of("America/Sao_Paulo"));
+        boolean expedienteHoje = hoje.getDayOfWeek() != DayOfWeek.SATURDAY
+                && hoje.getDayOfWeek() != DayOfWeek.SUNDAY;
+        if (expedienteHoje) {
+            inserirAgendamento(10, hoje, "09:00", "09:30", "CONFIRMADO");
+        }
+
+        mockMvc.perform(get("/api/v1/profissionais/{id}/agenda", 10))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").value(hoje.toString()))
+                .andExpect(jsonPath("$.expediente").value(expedienteHoje))
+                .andExpect(jsonPath("$.agendamentos.length()").value(expedienteHoje ? 1 : 0));
     }
 
     private long inserirPaciente(String nome) {
