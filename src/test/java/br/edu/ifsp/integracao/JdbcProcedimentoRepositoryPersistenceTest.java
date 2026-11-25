@@ -86,4 +86,9 @@ class JdbcProcedimentoRepositoryPersistenceTest {
     void deveIndicarQueProcedimentoInexistenteNaoExiste() {
         assertFalse(procedimentos.existePorId(Long.MAX_VALUE));
     }
+
+    @Test
+    void deveIndicarQueProcedimentoComIdNuloNaoExiste() {
+        assertFalse(procedimentos.existePorId(null));
+    }
 }
