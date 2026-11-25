@@ -177,7 +177,12 @@ class AgendamentoApiIntegrationTest {
                                 }
                                 """))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.status").value("UNPROCESSABLE_ENTITY"));
+                .andExpect(jsonPath("$.status").value("UNPROCESSABLE_ENTITY"))
+                .andExpect(jsonPath("$.message").value(
+                        "Data/hora inválida: o horário solicitado já passou."))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage")
+                        .value("br.edu.ifsp.dominio.excecao.DataHoraNoPassadoException"));
     }
 
     @Test
