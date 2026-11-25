@@ -120,6 +120,13 @@ class ProfissionalApiIntegrationTest {
                 .andExpect(jsonPath("$.agendamentos.length()").value(expedienteHoje ? 1 : 0));
     }
 
+    @Test
+    void deveRetornar400QuandoDataNaoSeguirFormatoIso() throws Exception {
+        mockMvc.perform(get("/api/v1/profissionais/{id}/agenda", 10)
+                        .param("data", "25/11/2026"))
+                .andExpect(status().isBadRequest());
+    }
+
     private long inserirPaciente(String nome) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
