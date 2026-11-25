@@ -39,6 +39,20 @@ class UsuarioPersistenciaTest extends PersistenciaTestBase {
                 .hasValueSatisfying(usuario -> assertThat(usuario.getName()).isEqualTo("Yasmim"));
     }
 
+    @Test
+    @DisplayName("Salvar um usuário existente atualiza os dados sem duplicar o registro")
+    void salvarUsuarioExistenteAtualizaSemDuplicarORegistro(){
+        User original = repositorio.save(novoUsuario("yasmim@email.com"));
+        User alterado = new User(original.getId(), "Yasmim Sayuri", original.getLastname(),
+                original.getEmail(), original.getPassword(), original.getRole());
+
+        repositorio.save(alterado);
+
+        assertThat(repositorio.findByEmail("yasmim@email.com"))
+                .hasValueSatisfying(usuario -> assertThat(usuario.getName()).isEqualTo("Yasmim Sayuri"));
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM app_user", Integer.class)).isEqualTo(1);
+    }
+
     private User novoUsuario(String email) {
         return new User(UUID.randomUUID(), "Yasmim", "Assis", email, "senha-codificada", Role.USER);
     }
