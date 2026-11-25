@@ -120,4 +120,11 @@ class JdbcProcedimentoRepositoryPersistenceTest {
     void deveRetornarVazioAoBuscarProcedimentoComIdNulo() {
         assertTrue(procedimentos.buscarPorId(null).isEmpty());
     }
+
+    @Test
+    void deveNaoInserirAoSalvarProcedimentoComIdInexistente() {
+        procedimentos.salvar(new Procedimento(999L, "Retorno"));
+
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM procedimento", Integer.class));
+    }
 }
