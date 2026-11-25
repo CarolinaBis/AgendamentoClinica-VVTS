@@ -69,4 +69,21 @@ class PacienteApiTest extends ApiTestBase {
                 .statusCode(404)
                 .body("status", equalTo("NOT_FOUND"));
     }
+
+    @Test
+    @DisplayName("GET /pacientes/{id}/faltas de um paciente novo devolve 200 sem faltas e não bloqueado")
+    void consultarFaltasDePacienteNovoDevolve200() {
+        String nome = faker.name().fullName();
+        long id = criarPaciente(nome);
+
+        comToken()
+                .when()
+                .get("/pacientes/{id}/faltas", id)
+                .then()
+                .statusCode(200)
+                .body("pacienteId", equalTo((int) id))
+                .body("nome", equalTo(nome))
+                .body("faltasVigentes", equalTo(0))
+                .body("bloqueado", equalTo(false));
+    }
 }
