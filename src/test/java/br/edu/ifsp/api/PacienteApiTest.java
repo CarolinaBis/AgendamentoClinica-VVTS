@@ -27,4 +27,18 @@ class PacienteApiTest extends ApiTestBase {
                 .body("id", notNullValue())
                 .body("nome", equalTo(nome));
     }
+
+    @Test
+    @DisplayName("POST /pacientes com nome em branco devolve 400")
+    void cadastrarPacienteComNomeEmBrancoDevolve400(){
+        comToken()
+                .body(Map.of("nome", " " ))
+
+                .when()
+                .post("/pacientes")
+
+                .then()
+                .statusCode(400)
+                .body("message", equalTo("O nome do paciente é obrigatório."));
+    }
 }
