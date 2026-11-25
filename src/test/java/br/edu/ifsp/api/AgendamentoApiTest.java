@@ -91,6 +91,21 @@ class AgendamentoApiTest extends ApiTestBase {
                 .body("inicio", startsWith(novoInicio.toString()));
     }
 
+    @Test
+    @DisplayName("POST /agendamentos/{id}/cancelamento devolve 200 com o status cancelado")
+    void cancelarAgendamentoDevolve200() {
+        long agendamentoId = criarAgendamento();
+
+        comToken()
+                .when()
+                .post("/agendamentos/{id}/cancelamento", agendamentoId)
+                .then()
+                .statusCode(200)
+                .body("status", equalTo("CANCELADO"));
+    }
+
+
+
     private long criarAgendamento() {
         long pacienteId = criarPaciente(faker.name().fullName());
         long procedimentoId = criarProcedimento("Consulta clínica");
