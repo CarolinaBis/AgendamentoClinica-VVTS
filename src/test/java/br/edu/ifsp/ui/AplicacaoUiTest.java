@@ -68,6 +68,17 @@ class AplicacaoUiTest extends UiTestBase {
         assertThat(app.textoDoAviso()).doesNotContain("Consulta agendada");
     }
 
+    @Test
+    @DisplayName("Ver faltas sem informar o paciente pede o id do paciente")
+    void verFaltasSemPacientePedeId() {
+        AppPage app = entrarComNovoUsuario();
+
+        app.verFaltas();
+
+        app.aguardarAviso("Informe o id do paciente.");
+        assertThat(app.avisoEhDeErro()).isTrue();
+    }
+
     private LocalDateTime proximaSegundaAs(int hora) {
         return LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY)).atTime(hora, 0);
     }
