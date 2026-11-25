@@ -127,6 +127,12 @@ class ProfissionalApiIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void deveRetornar400QuandoIdDoProfissionalNaoForNumerico() throws Exception {
+        mockMvc.perform(get("/api/v1/profissionais/{id}/agenda", "profissional-invalido"))
+                .andExpect(status().isBadRequest());
+    }
+
     private long inserirPaciente(String nome) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
