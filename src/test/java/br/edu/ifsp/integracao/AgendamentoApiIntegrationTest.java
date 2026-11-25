@@ -87,7 +87,12 @@ class AgendamentoApiIntegrationTest {
                                 }
                                 """.formatted(pacienteId, procedimentoId)))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.status").value("UNPROCESSABLE_ENTITY"));
+                .andExpect(jsonPath("$.status").value("UNPROCESSABLE_ENTITY"))
+                .andExpect(jsonPath("$.message").value(
+                        "O horário solicitado está fora do horário de funcionamento da clínica."))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage")
+                        .value("br.edu.ifsp.dominio.excecao.ForaDoHorarioDeFuncionamentoException"));
     }
 
     @Test
