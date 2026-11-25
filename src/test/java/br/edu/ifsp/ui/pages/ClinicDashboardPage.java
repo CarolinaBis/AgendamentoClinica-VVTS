@@ -4,6 +4,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
@@ -77,6 +78,20 @@ public class ClinicDashboardPage {
         wait.until(ExpectedConditions.textMatches(
                 NOTICE, Pattern.compile("Agenda de " + Pattern.quote(date)
                         + ": \\d+ agendamento\\(s\\)\\.")));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(RESULT_TABLE));
+    }
+
+    public void consultPatientHistory(long patientId, String status, String fromDate, String toDate) {
+        driver.findElement(By.cssSelector("#form-historico [name='pacienteId']"))
+                .sendKeys(Long.toString(patientId));
+        new Select(driver.findElement(By.cssSelector("#form-historico [name='status']")))
+                .selectByVisibleText(status);
+        setInputValue("#form-historico [name='de']", fromDate);
+        setInputValue("#form-historico [name='ate']", toDate);
+        driver.findElement(By.id("btn-ver-historico")).click();
+
+        wait.until(ExpectedConditions.textMatches(
+                NOTICE, Pattern.compile("\\d+ agendamento\\(s\\) no histórico\\.")));
         wait.until(ExpectedConditions.visibilityOfElementLocated(RESULT_TABLE));
     }
 
