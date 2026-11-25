@@ -104,7 +104,22 @@ class AgendamentoApiTest extends ApiTestBase {
                 .body("status", equalTo("CANCELADO"));
     }
 
+    @Test
+    @DisplayName("POST /agendamentos/{id}/procedimentos devolve 200 com o procedimento adicionado")
+    void adicionarProcedimentoDevolve200() {
+        long agendamentoId = criarAgendamento();
+        long exameId = criarProcedimento("Exame de sangue");
 
+        comToken()
+                .body(java.util.Map.of("procedimentoId", exameId))
+                .when()
+                .post("/agendamentos/{id}/procedimentos", agendamentoId)
+                .then()
+                .statusCode(200)
+                .body("procedimentos", hasSize(2))
+                .body("procedimentos[1].procedimentoId", equalTo((int) exameId));
+    }
+    5
 
     private long criarAgendamento() {
         long pacienteId = criarPaciente(faker.name().fullName());
