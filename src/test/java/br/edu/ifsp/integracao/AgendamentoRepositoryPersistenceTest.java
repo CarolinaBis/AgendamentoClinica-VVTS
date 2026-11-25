@@ -107,4 +107,33 @@ class AgendamentoRepositoryPersistenceTest {
         assertTrue(recuperado.getProcedimentos().stream().allMatch(
                 ProcedimentoAgendado::isExecutado));
     }
+
+    @Test
+    void deveBuscarAgendamentosDoProfissionalEmOrdemCronologica() {
+        Paciente paciente = pacientes.salvar(Paciente.novo("Carlos Lima"));
+        Procedimento procedimento = procedimentos.salvar(new Procedimento(null, "Consulta"));
+        LocalDateTime dia = LocalDateTime.of(2099, 3, 10, 9, 0);
+
+        Agendamento maisTarde = Agendamento.reconstituir(null, paciente.getId(), 42L,
+                new PeriodoAtendimento(dia.plusHours(2), dia.plusHours(2).plusMinutes(30)),
+                StatusAgendamento.CONFIRMADO,
+                List.of(ProcedimentoAgendado.pendente(procedimento.getId())), null);
+        Agendamento maisCedo = Agendamento.reconstituir(null, paciente.getId(), 42L,
+                new PeriodoAtendimento(dia, dia.plusMinutes(30)),
+                StatusAgendamento.CONFIRMADO,
+                List.of(ProcedimentoAgendado.pendente(procedimento.getId())), null);
+        Agendamento outroProfissional = Agendamento.reconstituir(null, paciente.getId(), 99L,
+                new PeriodoAtendimento(dia.plusHours(1), dia.plusHours(1).plusMinutes(30)),
+                StatusAgendamento.CONFIRMADO,
+                List.of(ProcedimentoAgendado.pendente(procedimento.getId())), null);
+
+        agendamentos.salvar(maisTarde);
+        agendamentos.salvar(maisCedo);
+        agendamentos.salvar(outroProfissional);
+
+        assertEquals(List.of(maisCedo.getId(), maisTarde.getId()),
+                agendamentos.buscarPorProfissional(42L).stream()
+                        .map(Agendamento::getId)
+                        .toList());
+    }
 }
