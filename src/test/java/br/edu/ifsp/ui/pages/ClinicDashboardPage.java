@@ -1,18 +1,20 @@
 package br.edu.ifsp.ui.pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class ClinicDashboardPage {
 
     private static final By NOTICE = By.id("aviso");
     private static final By PATIENT_RESULT = By.cssSelector("#resultado pre");
-    private static final By PROCEDURES_TABLE = By.cssSelector("#resultado table");
+    private static final By RESULT_TABLE = By.cssSelector("#resultado table");
 
     private final WebDriver driver;
     private final WebDriverWait wait;
@@ -22,21 +24,23 @@ public class ClinicDashboardPage {
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
 
-    public void registerPatient(String name) {
+    public long registerPatient(String name) {
         driver.findElement(By.cssSelector("#form-paciente [name='nome']")).sendKeys(name);
         driver.findElement(By.id("btn-cadastrar-paciente")).click();
 
         wait.until(ExpectedConditions.textMatches(
                 NOTICE, Pattern.compile("Paciente cadastrado: id \\d+\\.")));
         wait.until(ExpectedConditions.visibilityOfElementLocated(PATIENT_RESULT));
+        return generatedId("Paciente cadastrado: id ");
     }
 
-    public void registerProcedure(String name) {
+    public long registerProcedure(String name) {
         driver.findElement(By.cssSelector("#form-procedimento [name='nome']")).sendKeys(name);
         driver.findElement(By.id("btn-cadastrar-procedimento")).click();
 
         wait.until(ExpectedConditions.textMatches(
                 NOTICE, Pattern.compile("Procedimento cadastrado: id \\d+\\.")));
+        return generatedId("Procedimento cadastrado: id ");
     }
 
     public void listProcedures() {
@@ -44,7 +48,32 @@ public class ClinicDashboardPage {
 
         wait.until(ExpectedConditions.textMatches(
                 NOTICE, Pattern.compile("\\d+ procedimento\\(s\\)\\.")));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(PROCEDURES_TABLE));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(RESULT_TABLE));
+    }
+
+    public void scheduleAppointment(long patientId, long professionalId, String start, String end,
+                                    List<Long> procedureIds) {
+        driver.findElement(By.cssSelector("#form-agendar [name='pacienteId']"))
+                .sendKeys(Long.toString(patientId));
+        driver.findElement(By.cssSelector("#form-agendar [name='profissionalId']"))
+                .sendKeys(Long.toString(professionalId));
+        setDateTime("#form-agendar [name='inicio']", start);
+        setDateTime("#form-agendar [name='fim']", end);
+        driver.findElement(By.cssSelector("#form-agendar [name='procedimentoIds']"))
+                .sendKeys(String.join(",", procedureIds.stream().map(String::valueOf).toList()));
+        driver.findElement(By.id("btn-agendar")).click();
+
+        wait.until(ExpectedConditions.textMatches(
+                NOTICE, Pattern.compile("Consulta agendada: id \\d+ \\(.+\\)\\.")));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(RESULT_TABLE));
+    }
+
+    private void setDateTime(String selector, String value) {
+        ((JavascriptExecutor) driver).executeScript(
+                "arguments[0].value = arguments[1];"
+                        + "arguments[0].dispatchEvent(new Event('input', { bubbles: true }));"
+                        + "arguments[0].dispatchEvent(new Event('change', { bubbles: true }));",
+                driver.findElement(By.cssSelector(selector)), value);
     }
 
     public String getNotice() {
@@ -56,6 +85,15 @@ public class ClinicDashboardPage {
     }
 
     public String getProcedureList() {
-        return driver.findElement(PROCEDURES_TABLE).getText();
+        return driver.findElement(RESULT_TABLE).getText();
+    }
+
+    public String getResultTable() {
+        return driver.findElement(RESULT_TABLE).getText();
+    }
+
+    private long generatedId(String prefix) {
+        String notice = getNotice();
+        return Long.parseLong(notice.substring(prefix.length(), notice.length() - 1));
     }
 }
