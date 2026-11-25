@@ -57,4 +57,16 @@ class PacienteApiTest extends ApiTestBase {
                 .body("id", equalTo((int) id))
                 .body("nome", equalTo(nome));
     }
+
+    @Test
+    @DisplayName("GET /pacientes/{id} de um paciente inexistente devolve 404")
+    void buscarPacienteInexistenteDevolve404() {
+        comToken()
+                .when()
+                .get("/pacientes/{id}", 99999)
+
+                .then()
+                .statusCode(404)
+                .body("status", equalTo("NOT_FOUND"));
+    }
 }
