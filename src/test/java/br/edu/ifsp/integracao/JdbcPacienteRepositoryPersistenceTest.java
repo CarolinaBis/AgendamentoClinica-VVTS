@@ -16,6 +16,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(properties = "spring.datasource.url=jdbc:sqlite:target/paciente-persistence-tests.db?foreign_keys=on")
 @Tag("PersistenceTest")
@@ -74,5 +75,10 @@ class JdbcPacienteRepositoryPersistenceTest {
                         LocalDateTime.parse(rs.getString("data_referencia"))),
                 original.getId());
         assertEquals(faltasAtualizadas, faltasPersistidas);
+    }
+
+    @Test
+    void deveRetornarVazioAoBuscarPacienteComIdNulo() {
+        assertTrue(pacientes.buscarPorId(null).isEmpty());
     }
 }
