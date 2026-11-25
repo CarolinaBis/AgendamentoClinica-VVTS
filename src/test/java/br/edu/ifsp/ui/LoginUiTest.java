@@ -53,5 +53,21 @@ class LoginUiTest extends UiTestBase {
         app.aguardarAviso("Bem-vindo(a), " + email);
     }
 
+    @Test
+    @DisplayName("Entrar com senha incorreta mostra erro e continua na tela de login")
+    void entrarComSenhaIncorretaMostraErro() {
+        String email = faker.internet().emailAddress();
+        LoginPage login = abrirSistema();
+        login.registrar(faker.name().firstName(), faker.name().lastName(), email, SENHA);
+        login.aguardarAviso("Usuário criado");
+
+        login.entrar(email, "senha-errada");
+
+        login.aguardarAviso("E-mail ou senha inválidos.");
+        assertThat(login.avisoEhDeErro()).isTrue();
+        assertThat(login.estaVisivel()).isTrue();
+    }
+
+
 
 }
