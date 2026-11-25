@@ -55,7 +55,10 @@ class ProcedimentoApiIntegrationTest {
                                 {"nome": "   "}
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value("BAD_REQUEST"));
+                .andExpect(jsonPath("$.status").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.message").value("O nome do procedimento é obrigatório."))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage").value("java.lang.IllegalArgumentException"));
     }
 
     @Test
