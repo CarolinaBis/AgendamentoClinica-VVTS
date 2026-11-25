@@ -11,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -79,5 +80,10 @@ class JdbcProcedimentoRepositoryPersistenceTest {
         jdbc.update("INSERT INTO procedimento (id, nome) VALUES (?, ?)", 70L, "Retorno");
 
         assertTrue(procedimentos.existePorId(70L));
+    }
+
+    @Test
+    void deveIndicarQueProcedimentoInexistenteNaoExiste() {
+        assertFalse(procedimentos.existePorId(Long.MAX_VALUE));
     }
 }
