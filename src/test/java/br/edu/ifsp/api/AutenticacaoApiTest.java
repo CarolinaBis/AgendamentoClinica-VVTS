@@ -90,7 +90,8 @@ class AutenticacaoApiTest extends ApiTestBase {
                 .statusCode(401);
     }
 
-    @Test@DisplayName("POST / registrar com e-mail sem @ devolve 400")
+    @Test
+    @DisplayName("POST / registrar com e-mail sem @ devolve 400")
     void registrarComEmailInvalidoDevolve400(){
         semToken()
                 .body(dadosDeRegistro("email-sem-arroba"))
@@ -101,7 +102,5 @@ class AutenticacaoApiTest extends ApiTestBase {
                 .then()
                 .statusCode(400);
     }
-
-
 
 }
