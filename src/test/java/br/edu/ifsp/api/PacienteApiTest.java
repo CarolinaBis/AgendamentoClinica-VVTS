@@ -8,6 +8,7 @@ import java.util.Map;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.hasSize;
 
 @Tag("ApiTest")
 @Tag("IntegrationTest")
@@ -85,5 +86,22 @@ class PacienteApiTest extends ApiTestBase {
                 .body("nome", equalTo(nome))
                 .body("faltasVigentes", equalTo(0))
                 .body("bloqueado", equalTo(false));
+    }
+
+    @Test
+    @DisplayName("GET /pacientes/{id}/agendamentos devolve 200 com o histórico do paciente")
+    void consultarHistoricoDoPacienteDevolve200() {
+        long pacienteId = criarPaciente(faker.name().fullName());
+        long procedimentoId = criarProcedimento("Consulta clínica");
+        long agendamentoId = agendar(pacienteId, 10L, proximaSegundaAs(9), procedimentoId);
+
+        comToken()
+                .when()
+                .get("/pacientes/{id}/agendamentos", pacienteId)
+                .then()
+                .statusCode(200)
+                .body("", hasSize(1))
+                .body("[0].id", equalTo((int) agendamentoId))
+                .body("[0].pacienteId", equalTo((int) pacienteId));
     }
 }
