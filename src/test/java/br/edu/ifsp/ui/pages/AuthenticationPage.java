@@ -54,11 +54,19 @@ public class AuthenticationPage {
     }
 
     public void login(String email, String password) {
-        driver.findElement(By.cssSelector("#form-entrar [name='username']")).sendKeys(email);
-        driver.findElement(By.cssSelector("#form-entrar [name='password']")).sendKeys(password);
-        driver.findElement(By.id("btn-entrar")).click();
+        submitLogin(email, password);
 
         wait.until(ExpectedConditions.visibilityOfElementLocated(APPLICATION));
         wait.until(ExpectedConditions.textToBe(USER_EMAIL, email));
+    }
+
+    public void submitLogin(String email, String password) {
+        driver.findElement(By.cssSelector("#form-entrar [name='username']")).sendKeys(email);
+        driver.findElement(By.cssSelector("#form-entrar [name='password']")).sendKeys(password);
+        driver.findElement(By.id("btn-entrar")).click();
+    }
+
+    public void waitForNotice(String notice) {
+        wait.until(ExpectedConditions.textToBe(NOTICE, notice));
     }
 }

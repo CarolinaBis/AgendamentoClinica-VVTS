@@ -68,4 +68,15 @@ class AuthenticationUiIntegrationTest {
         assertFalse(authenticationPage.isLoginFormVisible());
         assertEquals("Bem-vindo(a), " + email + ".", authenticationPage.getNotice());
     }
+
+    @Test
+    void deveExibirErroAoEntrarComCredenciaisInvalidas() {
+        authenticationPage.submitLogin(
+                faker.internet().emailAddress(), faker.internet().password());
+        authenticationPage.waitForNotice("E-mail ou senha inválidos.");
+
+        assertTrue(authenticationPage.isLoginFormVisible());
+        assertFalse(authenticationPage.isApplicationVisible());
+        assertEquals("E-mail ou senha inválidos.", authenticationPage.getNotice());
+    }
 }
