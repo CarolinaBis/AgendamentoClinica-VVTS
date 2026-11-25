@@ -263,7 +263,11 @@ class AgendamentoApiIntegrationTest {
                                 {"procedimentoId": %d}
                                 """.formatted(segundoProcedimentoId)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.status").value("CONFLICT"));
+                .andExpect(jsonPath("$.status").value("CONFLICT"))
+                .andExpect(jsonPath("$.message").value("O procedimento já está presente no agendamento."))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage")
+                        .value("br.edu.ifsp.dominio.excecao.ProcedimentoDuplicadoException"));
     }
 
     @Test
@@ -296,7 +300,12 @@ class AgendamentoApiIntegrationTest {
         mockMvc.perform(delete("/api/v1/agendamentos/{id}/procedimentos/{procedimentoId}",
                         agendamentoId, procedimentoId))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.status").value("CONFLICT"));
+                .andExpect(jsonPath("$.status").value("CONFLICT"))
+                .andExpect(jsonPath("$.message").value(
+                        "Não é possível remover: o agendamento deve ter ao menos um procedimento."))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage")
+                        .value("br.edu.ifsp.dominio.excecao.UltimoProcedimentoException"));
     }
 
     @Test
@@ -329,7 +338,12 @@ class AgendamentoApiIntegrationTest {
         mockMvc.perform(post("/api/v1/agendamentos/{id}/procedimentos/{procedimentoId}/execucao",
                         agendamentoId, segundoProcedimentoId))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value("NOT_FOUND"));
+                .andExpect(jsonPath("$.status").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value(
+                        "Procedimento não encontrado: ele não pertence a este agendamento."))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage")
+                        .value("br.edu.ifsp.dominio.excecao.ProcedimentoNaoEncontradoException"));
     }
 
     @Test
@@ -355,7 +369,13 @@ class AgendamentoApiIntegrationTest {
 
         mockMvc.perform(post("/api/v1/agendamentos/{id}/realizacao", agendamentoId))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.status").value("CONFLICT"));
+                .andExpect(jsonPath("$.status").value("CONFLICT"))
+                .andExpect(jsonPath("$.message").value(
+                        "Confirme individualmente cada procedimento antes de concluir a consulta. "
+                                + "Pendentes: [" + procedimentoId + "]."))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage")
+                        .value("br.edu.ifsp.dominio.excecao.ProcedimentosPendentesException"));
 
         jdbc.update("UPDATE agendamento_procedimento SET executado = 1 WHERE agendamento_id = ?",
                 agendamentoId);
@@ -419,7 +439,12 @@ class AgendamentoApiIntegrationTest {
 
         mockMvc.perform(post("/api/v1/agendamentos/{id}/falta", agendamentoFuturoId))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.status").value("CONFLICT"));
+                .andExpect(jsonPath("$.status").value("CONFLICT"))
+                .andExpect(jsonPath("$.message").value(
+                        "O agendamento ainda não atingiu o horário previsto."))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage")
+                        .value("br.edu.ifsp.dominio.excecao.HorarioNaoAtingidoException"));
     }
 
     private long inserirPaciente() {
