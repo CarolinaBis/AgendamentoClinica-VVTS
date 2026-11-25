@@ -4,9 +4,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
+
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
+
+import static org.hamcrest.Matchers.startsWith;
 
 @Tag("ApiTest")
 @Tag("IntegrationTest")
@@ -70,6 +74,21 @@ class AgendamentoApiTest extends ApiTestBase {
                 .statusCode(200)
                 .body("id", equalTo((int) agendamentoId))
                 .body("status", equalTo("CONFIRMADO"));
+    }
+
+    @Test
+    @DisplayName("PUT /agendamentos/{id}/periodo para um horário válido devolve 200 com o novo horário")
+    void remarcarParaHorarioValidoDevolve200() {
+        long agendamentoId = criarAgendamento();
+        LocalDateTime novoInicio = proximaSegundaAs(14);
+
+        comToken()
+                .body(java.util.Map.of("inicio", novoInicio.toString(), "fim", novoInicio.plusHours(1).toString()))
+                .when()
+                .put("/agendamentos/{id}/periodo", agendamentoId)
+                .then()
+                .statusCode(200)
+                .body("inicio", startsWith(novoInicio.toString()));
     }
 
     private long criarAgendamento() {
