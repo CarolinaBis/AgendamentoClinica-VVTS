@@ -86,4 +86,16 @@ class JdbcPacienteRepositoryPersistenceTest {
     void deveRetornarVazioAoBuscarPacienteInexistente() {
         assertTrue(pacientes.buscarPorId(Long.MAX_VALUE).isEmpty());
     }
+
+    @Test
+    void deveRecuperarPacientePersistidoSemFaltas() {
+        Long pacienteId = 123L;
+        jdbc.update("INSERT INTO paciente (id, nome) VALUES (?, ?)", pacienteId, "Ana Souza");
+
+        Paciente recuperado = pacientes.buscarPorId(pacienteId).orElseThrow();
+
+        assertEquals(pacienteId, recuperado.getId());
+        assertEquals("Ana Souza", recuperado.getNome());
+        assertTrue(recuperado.getFaltas().isEmpty());
+    }
 }
