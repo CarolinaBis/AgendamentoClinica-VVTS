@@ -119,7 +119,21 @@ class AgendamentoApiTest extends ApiTestBase {
                 .body("procedimentos", hasSize(2))
                 .body("procedimentos[1].procedimentoId", equalTo((int) exameId));
     }
-    5
+
+    @Test
+    @DisplayName("POST /agendamentos/{id}/procedimentos/{procedimentoId}/execucao devolve 200 com o procedimento executado")
+    void executarProcedimentoDevolve200() {
+        long pacienteId = criarPaciente(faker.name().fullName());
+        long procedimentoId = criarProcedimento("Consulta clínica");
+        long agendamentoId = agendar(pacienteId, 10L, proximaSegundaAs(9), procedimentoId);
+
+        comToken()
+                .when()
+                .post("/agendamentos/{id}/procedimentos/{procedimentoId}/execucao", agendamentoId, procedimentoId)
+                .then()
+                .statusCode(200)
+                .body("procedimentos[0].executado", equalTo(true));
+    }
 
     private long criarAgendamento() {
         long pacienteId = criarPaciente(faker.name().fullName());
