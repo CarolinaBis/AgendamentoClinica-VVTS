@@ -58,6 +58,20 @@ class AgendamentoApiTest extends ApiTestBase {
                 .statusCode(404);
     }
 
+    @Test
+    @DisplayName("GET /agendamentos/{id} devolve 200 com o agendamento")
+    void buscarAgendamentoDevolve200() {
+        long agendamentoId = criarAgendamento();
+
+        comToken()
+                .when()
+                .get("/agendamentos/{id}", agendamentoId)
+                .then()
+                .statusCode(200)
+                .body("id", equalTo((int) agendamentoId))
+                .body("status", equalTo("CONFIRMADO"));
+    }
+
     private long criarAgendamento() {
         long pacienteId = criarPaciente(faker.name().fullName());
         long procedimentoId = criarProcedimento("Consulta clínica");
