@@ -1,5 +1,6 @@
 package br.edu.ifsp.ui;
 
+import br.edu.ifsp.ui.pages.AppPage;
 import br.edu.ifsp.ui.pages.LoginPage;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.AfterEach;
@@ -48,6 +49,17 @@ public abstract class UiTestBase {
     protected LoginPage abrirSistema() {
         driver.get("http://localhost:" + porta + "/");
         return new LoginPage(driver);
+    }
+
+    protected AppPage entrarComNovoUsuario() {
+        String email = faker.internet().emailAddress();
+        LoginPage login = abrirSistema();
+        login.registrar(faker.name().firstName(), faker.name().lastName(), email, SENHA);
+        login.aguardarAviso("Usuário criado");
+        login.entrar(email, SENHA);
+        AppPage app = new AppPage(driver);
+        app.aguardarCarregar();
+        return app;
     }
 
     private void limparBanco() {

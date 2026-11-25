@@ -68,6 +68,18 @@ class LoginUiTest extends UiTestBase {
         assertThat(login.estaVisivel()).isTrue();
     }
 
+    @Test
+    @DisplayName("Sair volta para a tela de login com a mensagem de saída")
+    void sairVoltaParaTelaDeLogin() {
+        AppPage app = entrarComNovoUsuario();
+
+        LoginPage login = app.sair();
+
+        login.aguardarAviso("Você saiu.");
+        assertThat(login.estaVisivel()).isTrue();
+        assertThat(app.estaVisivel()).isFalse();
+    }
+
 
 
 }
