@@ -63,4 +63,22 @@ class AutenticacaoApiTest extends ApiTestBase {
 
     }
 
+    @Test
+    @DisplayName("POST /autenticar com senha incorreta devolve 401")
+    void autenticarComSenhaIncorretaDevolve401() {
+        String email = faker.internet().emailAddress();
+        semToken().body(dadosDeRegistro(email)).post("/register").then().statusCode(201);
+
+        semToken()
+                .body(Map.of("username", email, "password", "senha-errada"))
+
+                .when()
+                .post("/authenticate")
+
+                .then()
+                .statusCode(401);
+    }
+
+
+
 }
