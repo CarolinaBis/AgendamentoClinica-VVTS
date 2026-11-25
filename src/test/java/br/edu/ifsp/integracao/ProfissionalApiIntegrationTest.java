@@ -124,13 +124,22 @@ class ProfissionalApiIntegrationTest {
     void deveRetornar400QuandoDataNaoSeguirFormatoIso() throws Exception {
         mockMvc.perform(get("/api/v1/profissionais/{id}/agenda", 10)
                         .param("data", "25/11/2026"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.message").value("Parse attempt failed for value [25/11/2026]"))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage").value("java.lang.IllegalArgumentException"));
     }
 
     @Test
     void deveRetornar400QuandoIdDoProfissionalNaoForNumerico() throws Exception {
         mockMvc.perform(get("/api/v1/profissionais/{id}/agenda", "profissional-invalido"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.message")
+                        .value("For input string: \"profissional-invalido\""))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage").value("java.lang.NumberFormatException"));
     }
 
     @Test
