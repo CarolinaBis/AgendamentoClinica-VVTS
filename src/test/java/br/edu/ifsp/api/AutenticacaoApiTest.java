@@ -4,8 +4,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.emptyOrNullString;
+import static org.hamcrest.Matchers.not;
 
 @Tag("ApiTest")
 @Tag("IntegrationTest")
@@ -25,7 +29,7 @@ class AutenticacaoApiTest extends ApiTestBase {
 
     @Test
     @DisplayName("POST /registro com e-mail já cadastrado devolve 409")
-    void registrarComEmailJaCadastradoDevolve409(){
+    void registrarComEmailJaCadastradoDevolve409() {
         String email = faker.internet().emailAddress();
         semToken().body(dadosDeRegistro(email)).post("/register").then().statusCode(201);
 
@@ -33,11 +37,30 @@ class AutenticacaoApiTest extends ApiTestBase {
                 .body(dadosDeRegistro(email))
 
                 .when()
-                    .post("/register")
+                .post("/register")
 
                 .then()
-                    .statusCode(409)
-                    .body("message", containsString("already registered"));
+                .statusCode(409)
+                .body("message", containsString("already registered"));
+    }
+
+    @Test
+    @DisplayName("POST /autenticar com credenciais válidas devolve 200 e o token")
+    void autenticarComCredenciaisValidasDevolve200ComToken() {
+        String email = faker.internet().emailAddress();
+        semToken().body(dadosDeRegistro(email)).post("/register").then().statusCode(201);
+
+        semToken()
+                .body(Map.of("username", email, "password", SENHA))
+
+                .when()
+                .post("/authenticate")
+
+                .then()
+                .statusCode(200)
+                .body("token", not(emptyOrNullString()));
+
+
     }
 
 }
