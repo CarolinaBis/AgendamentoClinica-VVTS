@@ -166,4 +166,36 @@ class AgendamentoRepositoryPersistenceTest {
                         .map(Agendamento::getId)
                         .toList());
     }
+
+    @Test
+    void deveAtualizarAgendamentoESubstituirProcedimentosAssociados() {
+        Paciente paciente = pacientes.salvar(Paciente.novo("Marcos Rocha"));
+        Procedimento procedimentoOriginal = procedimentos.salvar(new Procedimento(null, "Avaliação"));
+        Procedimento procedimentoAtualizado = procedimentos.salvar(new Procedimento(null, "Tratamento"));
+        LocalDateTime inicioOriginal = LocalDateTime.of(2099, 5, 15, 9, 0);
+
+        Agendamento original = Agendamento.reconstituir(null, paciente.getId(), 42L,
+                new PeriodoAtendimento(inicioOriginal, inicioOriginal.plusMinutes(30)),
+                StatusAgendamento.CONFIRMADO,
+                List.of(ProcedimentoAgendado.pendente(procedimentoOriginal.getId())), null);
+        agendamentos.salvar(original);
+
+        LocalDateTime novoInicio = inicioOriginal.plusDays(1);
+        LocalDateTime realizadoEm = novoInicio.plusMinutes(40);
+        Agendamento atualizado = Agendamento.reconstituir(original.getId(), paciente.getId(), 42L,
+                new PeriodoAtendimento(novoInicio, novoInicio.plusMinutes(30)),
+                StatusAgendamento.REALIZADO,
+                List.of(ProcedimentoAgendado.reconstituir(procedimentoAtualizado.getId(), true)),
+                realizadoEm);
+        agendamentos.salvar(atualizado);
+
+        Agendamento recuperado = agendamentos.buscarPorId(original.getId()).orElseThrow();
+
+        assertEquals(novoInicio, recuperado.getPeriodo().inicio());
+        assertEquals(novoInicio.plusMinutes(30), recuperado.getPeriodo().fim());
+        assertEquals(StatusAgendamento.REALIZADO, recuperado.getStatus());
+        assertEquals(realizadoEm, recuperado.getRealizadoEm());
+        assertEquals(List.of(procedimentoAtualizado.getId()), recuperado.getProcedimentoIds());
+        assertTrue(recuperado.getProcedimentos().get(0).isExecutado());
+    }
 }
