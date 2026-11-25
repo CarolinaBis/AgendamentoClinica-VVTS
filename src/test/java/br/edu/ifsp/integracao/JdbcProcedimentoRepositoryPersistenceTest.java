@@ -57,4 +57,14 @@ class JdbcProcedimentoRepositoryPersistenceTest {
         assertEquals("Retorno", jdbc.queryForObject(
                 "SELECT nome FROM procedimento WHERE id = ?", String.class, original.getId()));
     }
+
+    @Test
+    void deveBuscarProcedimentoPorId() {
+        jdbc.update("INSERT INTO procedimento (id, nome) VALUES (?, ?)", 60L, "Avaliação");
+
+        Procedimento encontrado = procedimentos.buscarPorId(60L).orElseThrow();
+
+        assertEquals(60L, encontrado.getId());
+        assertEquals("Avaliação", encontrado.getNome());
+    }
 }
