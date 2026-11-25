@@ -79,6 +79,17 @@ class AplicacaoUiTest extends UiTestBase {
         assertThat(app.avisoEhDeErro()).isTrue();
     }
 
+    @Test
+    @DisplayName("Cancelar sem informar o agendamento pede o id do agendamento")
+    void cancelarSemAgendamentoPedeId() {
+        AppPage app = entrarComNovoUsuario();
+
+        app.cancelarAgendamento();
+
+        app.aguardarAviso("Informe o id do agendamento.");
+        assertThat(app.avisoEhDeErro()).isTrue();
+    }
+
     private LocalDateTime proximaSegundaAs(int hora) {
         return LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY)).atTime(hora, 0);
     }
