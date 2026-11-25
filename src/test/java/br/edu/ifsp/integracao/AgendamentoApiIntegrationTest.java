@@ -216,7 +216,12 @@ class AgendamentoApiIntegrationTest {
 
         mockMvc.perform(post("/api/v1/agendamentos/{id}/cancelamento", agendamentoId))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.status").value("CONFLICT"));
+                .andExpect(jsonPath("$.status").value("CONFLICT"))
+                .andExpect(jsonPath("$.message").value(
+                        "Não é possível cancelar um agendamento cancelado."))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage")
+                        .value("br.edu.ifsp.dominio.excecao.StatusInvalidoException"));
     }
 
     @Test
