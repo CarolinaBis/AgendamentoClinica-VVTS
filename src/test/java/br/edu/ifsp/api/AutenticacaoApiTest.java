@@ -79,6 +79,17 @@ class AutenticacaoApiTest extends ApiTestBase {
                 .statusCode(401);
     }
 
+    @Test
+    @DisplayName("Acessar um endpoint protegido sem token devolve 401")
+    void acessarEndpointProtegidoSemTokenDevolve401() {
+        semToken()
+                .when()
+                .get("/procedimentos")
+
+                .then()
+                .statusCode(401);
+    }
+
 
 
 }
