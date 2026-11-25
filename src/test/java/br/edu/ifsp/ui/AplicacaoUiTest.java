@@ -27,6 +27,21 @@ class AplicacaoUiTest extends UiTestBase {
         assertThat(app.avisoEhDeErro()).isFalse();
     }
 
+    @Test
+    @DisplayName("Cadastrar procedimentos e listar mostra todos na tabela")
+    void cadastrarEListarProcedimentos() {
+        AppPage app = entrarComNovoUsuario();
+        app.cadastrarProcedimento("Consulta clínica");
+        app.cadastrarProcedimento("Exame de sangue");
+
+        app.listarProcedimentos();
+
+        app.aguardarAviso("2 procedimento(s).");
+        assertThat(app.nomesDosProcedimentosListados()).containsExactly("Consulta clínica", "Exame de sangue");
+    }
+
+
+
     private LocalDateTime proximaSegundaAs(int hora) {
         return LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY)).atTime(hora, 0);
     }
