@@ -40,6 +40,20 @@ class AplicacaoUiTest extends UiTestBase {
         assertThat(app.nomesDosProcedimentosListados()).containsExactly("Consulta clínica", "Exame de sangue");
     }
 
+    @Test
+    @DisplayName("Agendar consulta em horário válido mostra a consulta confirmada")
+    void agendarConsultaValidaMostraConfirmada() {
+        AppPage app = entrarComNovoUsuario();
+        long pacienteId = app.cadastrarPaciente(faker.name().fullName());
+        long procedimentoId = app.cadastrarProcedimento("Consulta clínica");
+        LocalDateTime inicio = proximaSegundaAs(9);
+
+        app.agendar(pacienteId, 10L, inicio, inicio.plusHours(1), procedimentoId);
+
+        app.aguardarAviso("Consulta agendada");
+        assertThat(app.statusDoPrimeiroAgendamentoListado()).isEqualTo("Confirmado");
+    }
+
 
 
     private LocalDateTime proximaSegundaAs(int hora) {
