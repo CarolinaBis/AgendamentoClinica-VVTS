@@ -72,6 +72,21 @@ class ProfissionalApiIntegrationTest {
                 .andExpect(jsonPath("$.agendamentos[1].profissionalId").value(profissionalId));
     }
 
+    @Test
+    void naoDeveIncluirAgendamentosDoMesmoProfissionalEmOutraData() throws Exception {
+        LocalDate diaComAgendamento = LocalDate.of(2026, 11, 25);
+        LocalDate diaConsultado = LocalDate.of(2026, 11, 26);
+        inserirAgendamento(10, diaComAgendamento, "09:00", "09:30", "CONFIRMADO");
+
+        mockMvc.perform(get("/api/v1/profissionais/{id}/agenda", 10)
+                        .param("data", diaConsultado.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").value(diaConsultado.toString()))
+                .andExpect(jsonPath("$.expediente").value(true))
+                .andExpect(jsonPath("$.agendamentos").isArray())
+                .andExpect(jsonPath("$.agendamentos.length()").value(0));
+    }
+
     private long inserirPaciente(String nome) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
