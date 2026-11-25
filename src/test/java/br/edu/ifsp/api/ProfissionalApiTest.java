@@ -4,13 +4,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-
 import java.time.LocalDateTime;
-
-
+import java.time.LocalDate;
+import java.time.DayOfWeek;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.empty;
+import java.time.temporal.TemporalAdjusters;
 
 @Tag("ApiTest")
 @Tag("IntegrationTest")
@@ -34,4 +35,20 @@ class ProfissionalApiTest extends ApiTestBase {
                 .body("agendamentos", hasSize(1))
                 .body("agendamentos[0].id", equalTo((int) agendamentoId));
     }
+
+    @Test
+    @DisplayName("GET /profissionais/{id}/agenda num domingo devolve 200 sem expediente")
+    void consultarAgendaEmDomingoDevolveSemExpediente() {
+        LocalDate domingo = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.SUNDAY));
+
+        comToken()
+                .queryParam("data", domingo.toString())
+                .when()
+                .get("/profissionais/{id}/agenda", 10)
+                .then()
+                .statusCode(200)
+                .body("expediente", equalTo(false))
+                .body("agendamentos", empty());
+    }
+
 }
