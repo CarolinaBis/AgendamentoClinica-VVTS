@@ -53,6 +53,12 @@ class UsuarioPersistenciaTest extends PersistenciaTestBase {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM app_user", Integer.class)).isEqualTo(1);
     }
 
+    @Test
+    @DisplayName("Busacr usuário com e-mail nulo devolve vazio")
+    void buscarUsuarioComEmailNuloDevolveVazio(){
+        assertThat(repositorio.findByEmail(null)).isEmpty();
+    }
+
     private User novoUsuario(String email) {
         return new User(UUID.randomUUID(), "Yasmim", "Assis", email, "senha-codificada", Role.USER);
     }
