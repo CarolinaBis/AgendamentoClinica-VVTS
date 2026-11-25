@@ -1,0 +1,79 @@
+package br.edu.ifsp.integracao;
+
+import br.edu.ifsp.dominio.agendamento.Agendamento;
+import br.edu.ifsp.dominio.agendamento.AgendamentoRepository;
+import br.edu.ifsp.dominio.agendamento.PeriodoAtendimento;
+import br.edu.ifsp.dominio.agendamento.ProcedimentoAgendado;
+import br.edu.ifsp.dominio.agendamento.StatusAgendamento;
+import br.edu.ifsp.dominio.paciente.Paciente;
+import br.edu.ifsp.dominio.paciente.PacienteRepository;
+import br.edu.ifsp.dominio.procedimento.Procedimento;
+import br.edu.ifsp.dominio.procedimento.ProcedimentoRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.UncategorizedSQLException;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@SpringBootTest(properties = "spring.datasource.url=jdbc:sqlite:target/persistence-tests.db?foreign_keys=on")
+@Tag("PersistenceTest")
+@Tag("IntegrationTest")
+class AgendamentoRepositoryPersistenceTest {
+
+    @Autowired
+    private JdbcTemplate jdbc;
+
+    @Autowired
+    private AgendamentoRepository agendamentos;
+
+    @Autowired
+    private PacienteRepository pacientes;
+
+    @Autowired
+    private ProcedimentoRepository procedimentos;
+
+    @BeforeEach
+    void limparBanco() {
+        jdbc.update("DELETE FROM agendamento_procedimento");
+        jdbc.update("DELETE FROM falta");
+        jdbc.update("DELETE FROM agendamento");
+        jdbc.update("DELETE FROM procedimento");
+        jdbc.update("DELETE FROM paciente");
+    }
+
+    @Test
+    void deveImpedirAssociacaoDuplicadaDeProcedimentoNoMesmoAgendamento() {
+        Paciente paciente = pacientes.salvar(Paciente.novo("Maria da Silva"));
+        Procedimento procedimento = procedimentos.salvar(new Procedimento(null, "Consulta"));
+        LocalDateTime inicio = LocalDateTime.of(2099, 1, 5, 9, 0);
+
+        Agendamento agendamento = Agendamento.reconstituir(null, paciente.getId(), 10L,
+                new PeriodoAtendimento(inicio, inicio.plusMinutes(30)),
+                StatusAgendamento.CONFIRMADO,
+                List.of(ProcedimentoAgendado.pendente(procedimento.getId())), null);
+        agendamentos.salvar(agendamento);
+
+        UncategorizedSQLException erro = assertThrows(UncategorizedSQLException.class, () ->
+                jdbc.update("""
+                        INSERT INTO agendamento_procedimento
+                        (agendamento_id, procedimento_id, ordem, executado)
+                        VALUES (?, ?, ?, ?)
+                        """, agendamento.getId(), procedimento.getId(), 1, 0));
+        assertTrue(erro.getSQLException().getMessage().contains(
+                "UNIQUE constraint failed: agendamento_procedimento.agendamento_id, "
+                        + "agendamento_procedimento.procedimento_id"));
+
+        assertEquals(1, jdbc.queryForObject(
+                "SELECT COUNT(*) FROM agendamento_procedimento WHERE agendamento_id = ?",
+                Integer.class, agendamento.getId()));
+    }
+}
