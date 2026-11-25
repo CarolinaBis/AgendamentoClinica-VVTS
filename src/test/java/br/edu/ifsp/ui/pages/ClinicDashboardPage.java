@@ -57,8 +57,8 @@ public class ClinicDashboardPage {
                 .sendKeys(Long.toString(patientId));
         driver.findElement(By.cssSelector("#form-agendar [name='profissionalId']"))
                 .sendKeys(Long.toString(professionalId));
-        setDateTime("#form-agendar [name='inicio']", start);
-        setDateTime("#form-agendar [name='fim']", end);
+        setInputValue("#form-agendar [name='inicio']", start);
+        setInputValue("#form-agendar [name='fim']", end);
         driver.findElement(By.cssSelector("#form-agendar [name='procedimentoIds']"))
                 .sendKeys(String.join(",", procedureIds.stream().map(String::valueOf).toList()));
         driver.findElement(By.id("btn-agendar")).click();
@@ -68,7 +68,19 @@ public class ClinicDashboardPage {
         wait.until(ExpectedConditions.visibilityOfElementLocated(RESULT_TABLE));
     }
 
-    private void setDateTime(String selector, String value) {
+    public void consultProfessionalAgenda(long professionalId, String date) {
+        driver.findElement(By.cssSelector("#form-agenda [name='profissionalId']"))
+                .sendKeys(Long.toString(professionalId));
+        setInputValue("#form-agenda [name='data']", date);
+        driver.findElement(By.id("btn-consultar-agenda")).click();
+
+        wait.until(ExpectedConditions.textMatches(
+                NOTICE, Pattern.compile("Agenda de " + Pattern.quote(date)
+                        + ": \\d+ agendamento\\(s\\)\\.")));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(RESULT_TABLE));
+    }
+
+    private void setInputValue(String selector, String value) {
         ((JavascriptExecutor) driver).executeScript(
                 "arguments[0].value = arguments[1];"
                         + "arguments[0].dispatchEvent(new Event('input', { bubbles: true }));"

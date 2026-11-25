@@ -28,6 +28,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag("IntegrationTest")
 class AgendamentoUiIntegrationTest {
 
+    private static final DateTimeFormatter DATE_TIME_INPUT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+    private static final DateTimeFormatter DATE_TIME_DISPLAY =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter DATE_INPUT = DateTimeFormatter.ISO_LOCAL_DATE;
+
     private final Faker faker = new Faker();
 
     @LocalServerPort
@@ -63,28 +69,56 @@ class AgendamentoUiIntegrationTest {
 
     @Test
     void deveAgendarConsultaComPacienteEProcedimentoCadastrados() {
+        AgendamentoDeTeste agendamento = criarAgendamentoFuturo();
+
+        assertTrue(clinicDashboardPage.getNotice().matches("Consulta agendada: id \\d+ \\(.+\\)\\."));
+        String resultado = clinicDashboardPage.getResultTable();
+        assertTrue(resultado.contains(Long.toString(agendamento.pacienteId())));
+        assertTrue(resultado.contains(Long.toString(agendamento.profissionalId())));
+        assertTrue(resultado.contains(agendamento.inicio().format(DATE_TIME_DISPLAY)));
+        assertTrue(resultado.contains("Confirmado"));
+        assertTrue(resultado.contains(Long.toString(agendamento.procedimentoId())));
+    }
+
+    @Test
+    void deveConsultarAgendaDoProfissionalEExibirAgendamento() {
+        AgendamentoDeTeste agendamento = criarAgendamentoFuturo();
+
+        clinicDashboardPage.consultProfessionalAgenda(
+                agendamento.profissionalId(), agendamento.inicio().toLocalDate().format(DATE_INPUT));
+
+        assertTrue(clinicDashboardPage.getNotice().contains("1 agendamento(s)."));
+        String resultado = clinicDashboardPage.getResultTable();
+        assertTrue(resultado.contains(Long.toString(agendamento.pacienteId())));
+        assertTrue(resultado.contains(Long.toString(agendamento.profissionalId())));
+        assertTrue(resultado.contains(agendamento.inicio().format(DATE_TIME_DISPLAY)));
+        assertTrue(resultado.contains(Long.toString(agendamento.procedimentoId())));
+    }
+
+    private AgendamentoDeTeste criarAgendamentoFuturo() {
         long pacienteId = clinicDashboardPage.registerPatient(faker.name().fullName());
         long procedimentoId = clinicDashboardPage.registerProcedure(faker.commerce().productName());
         long profissionalId = faker.number().numberBetween(1000, 9999);
 
+        LocalDate dia = proximoDiaUtil();
+        LocalDateTime inicio = dia.atTime(10, 0);
+        LocalDateTime fim = inicio.plusMinutes(30);
+
+        clinicDashboardPage.scheduleAppointment(pacienteId, profissionalId,
+                inicio.format(DATE_TIME_INPUT), fim.format(DATE_TIME_INPUT), List.of(procedimentoId));
+        return new AgendamentoDeTeste(pacienteId, procedimentoId, profissionalId, inicio);
+    }
+
+    private LocalDate proximoDiaUtil() {
         LocalDate dia = LocalDate.now().plusDays(1);
         while (dia.getDayOfWeek() == DayOfWeek.SATURDAY
                 || dia.getDayOfWeek() == DayOfWeek.SUNDAY) {
             dia = dia.plusDays(1);
         }
-        LocalDateTime inicio = dia.atTime(10, 0);
-        LocalDateTime fim = inicio.plusMinutes(30);
-        DateTimeFormatter formatoDataHora = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+        return dia;
+    }
 
-        clinicDashboardPage.scheduleAppointment(pacienteId, profissionalId,
-                inicio.format(formatoDataHora), fim.format(formatoDataHora), List.of(procedimentoId));
-
-        assertTrue(clinicDashboardPage.getNotice().matches("Consulta agendada: id \\d+ \\(.+\\)\\."));
-        String resultado = clinicDashboardPage.getResultTable();
-        assertTrue(resultado.contains(Long.toString(pacienteId)));
-        assertTrue(resultado.contains(Long.toString(profissionalId)));
-        assertTrue(resultado.contains(inicio.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))));
-        assertTrue(resultado.contains("Confirmado"));
-        assertTrue(resultado.contains(Long.toString(procedimentoId)));
+    private record AgendamentoDeTeste(long pacienteId, long procedimentoId,
+                                      long profissionalId, LocalDateTime inicio) {
     }
 }
