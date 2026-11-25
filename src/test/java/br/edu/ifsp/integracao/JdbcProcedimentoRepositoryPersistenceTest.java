@@ -10,8 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(properties = "spring.datasource.url=jdbc:sqlite:target/procedimento-persistence-tests.db?foreign_keys=on")
 @Tag("PersistenceTest")
@@ -56,5 +60,71 @@ class JdbcProcedimentoRepositoryPersistenceTest {
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM procedimento", Integer.class));
         assertEquals("Retorno", jdbc.queryForObject(
                 "SELECT nome FROM procedimento WHERE id = ?", String.class, original.getId()));
+    }
+
+    @Test
+    void deveBuscarProcedimentoPorId() {
+        jdbc.update("INSERT INTO procedimento (id, nome) VALUES (?, ?)", 60L, "Avaliação");
+
+        Procedimento encontrado = procedimentos.buscarPorId(60L).orElseThrow();
+
+        assertEquals(60L, encontrado.getId());
+        assertEquals("Avaliação", encontrado.getNome());
+    }
+
+    @Test
+    void deveRetornarVazioAoBuscarProcedimentoInexistente() {
+        assertTrue(procedimentos.buscarPorId(Long.MAX_VALUE).isEmpty());
+    }
+
+    @Test
+    void deveIndicarQueProcedimentoExistePorId() {
+        jdbc.update("INSERT INTO procedimento (id, nome) VALUES (?, ?)", 70L, "Retorno");
+
+        assertTrue(procedimentos.existePorId(70L));
+    }
+
+    @Test
+    void deveIndicarQueProcedimentoInexistenteNaoExiste() {
+        assertFalse(procedimentos.existePorId(Long.MAX_VALUE));
+    }
+
+    @Test
+    void deveIndicarQueProcedimentoComIdNuloNaoExiste() {
+        assertFalse(procedimentos.existePorId(null));
+    }
+
+    @Test
+    void deveListarVazioQuandoNaoHaProcedimentos() {
+        assertTrue(procedimentos.listar().isEmpty());
+    }
+
+    @Test
+    void deveListarProcedimentosOrdenadosPorId() {
+        jdbc.update("INSERT INTO procedimento (id, nome) VALUES (?, ?)", 3L, "Canal");
+        jdbc.update("INSERT INTO procedimento (id, nome) VALUES (?, ?)", 1L, "Consulta");
+        jdbc.update("INSERT INTO procedimento (id, nome) VALUES (?, ?)", 2L, "Retorno");
+
+        List<Procedimento> listados = procedimentos.listar();
+
+        assertEquals(3, listados.size());
+        assertEquals(1L, listados.get(0).getId());
+        assertEquals("Consulta", listados.get(0).getNome());
+        assertEquals(2L, listados.get(1).getId());
+        assertEquals("Retorno", listados.get(1).getNome());
+        assertEquals(3L, listados.get(2).getId());
+        assertEquals("Canal", listados.get(2).getNome());
+    }
+
+    @Test
+    void deveRetornarVazioAoBuscarProcedimentoComIdNulo() {
+        assertTrue(procedimentos.buscarPorId(null).isEmpty());
+    }
+
+    @Test
+    void deveNaoInserirAoSalvarProcedimentoComIdInexistente() {
+        procedimentos.salvar(new Procedimento(999L, "Retorno"));
+
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM procedimento", Integer.class));
     }
 }
