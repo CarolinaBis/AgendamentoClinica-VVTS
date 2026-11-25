@@ -30,6 +30,21 @@ class AgendamentoApiTest extends ApiTestBase {
                 .body("procedimentos", hasSize(1));
     }
 
+    @Test
+    @DisplayName("POST /agendamentos fora do horário de funcionamento devolve 422")
+    void agendarForaDoHorarioDeFuncionamentoDevolve422() {
+        long pacienteId = criarPaciente(faker.name().fullName());
+        long procedimentoId = criarProcedimento("Consulta clínica");
+
+        comToken()
+                .body(dadosDeAgendamento(pacienteId, 10L, proximaSegundaAs(19), procedimentoId))
+                .when()
+                .post("/agendamentos")
+                .then()
+                .statusCode(422)
+                .body("status", equalTo("UNPROCESSABLE_ENTITY"));
+    }
+
     private long criarAgendamento() {
         long pacienteId = criarPaciente(faker.name().fullName());
         long procedimentoId = criarProcedimento("Consulta clínica");
