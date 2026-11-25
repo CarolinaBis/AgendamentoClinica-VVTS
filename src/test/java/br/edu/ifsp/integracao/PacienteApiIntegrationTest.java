@@ -120,7 +120,11 @@ class PacienteApiIntegrationTest {
     void deveRetornar404AoConsultarFaltasDePacienteInexistente() throws Exception {
         mockMvc.perform(get("/api/v1/pacientes/{id}/faltas", 999999))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value("NOT_FOUND"));
+                .andExpect(jsonPath("$.status").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("Paciente não encontrado(a): id 999999."))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage")
+                        .value("br.edu.ifsp.dominio.excecao.RecursoNaoEncontradoException"));
     }
 
     @Test
