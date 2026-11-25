@@ -198,4 +198,9 @@ class AgendamentoRepositoryPersistenceTest {
         assertEquals(List.of(procedimentoAtualizado.getId()), recuperado.getProcedimentoIds());
         assertTrue(recuperado.getProcedimentos().get(0).isExecutado());
     }
+
+    @Test
+    void deveRetornarVazioAoBuscarAgendamentoInexistente() {
+        assertTrue(agendamentos.buscarPorId(Long.MAX_VALUE).isEmpty());
+    }
 }
