@@ -12,6 +12,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(properties = "spring.datasource.url=jdbc:sqlite:target/procedimento-persistence-tests.db?foreign_keys=on")
 @Tag("PersistenceTest")
@@ -66,5 +67,10 @@ class JdbcProcedimentoRepositoryPersistenceTest {
 
         assertEquals(60L, encontrado.getId());
         assertEquals("Avaliação", encontrado.getNome());
+    }
+
+    @Test
+    void deveRetornarVazioAoBuscarProcedimentoInexistente() {
+        assertTrue(procedimentos.buscarPorId(Long.MAX_VALUE).isEmpty());
     }
 }
