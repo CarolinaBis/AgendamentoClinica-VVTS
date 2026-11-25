@@ -9,22 +9,16 @@ import br.edu.ifsp.dominio.paciente.Paciente;
 import br.edu.ifsp.dominio.paciente.PacienteRepository;
 import br.edu.ifsp.dominio.procedimento.Procedimento;
 import br.edu.ifsp.dominio.procedimento.ProcedimentoRepository;
-import br.edu.ifsp.security.user.Role;
-import br.edu.ifsp.security.user.User;
-import br.edu.ifsp.security.user.UserRepository;
 import org.springframework.dao.DataAccessException;
 
 
-import net.bytebuddy.asm.Advice;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -56,6 +50,11 @@ class AgendamentoPersistenciaTest extends PersistenciaTestBase {
                 ),
                 null
         );
+
+        Agendamento salvo = agendamentoRepositorio.salvar(agendamento);
+        Agendamento encontrado = agendamentoRepositorio.buscarPorId(salvo.getId()).orElseThrow();
+
+        assertThat(encontrado.getProcedimentoIds()).containsExactly(exame.getId(), consulta.getId());
     }
 
     @Test
