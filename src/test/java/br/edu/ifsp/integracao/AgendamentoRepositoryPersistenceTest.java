@@ -136,4 +136,34 @@ class AgendamentoRepositoryPersistenceTest {
                         .map(Agendamento::getId)
                         .toList());
     }
+
+    @Test
+    void deveBuscarAgendamentosDoPacienteEmOrdemCronologica() {
+        Paciente paciente = pacientes.salvar(Paciente.novo("Beatriz Costa"));
+        Paciente outroPaciente = pacientes.salvar(Paciente.novo("Rafael Alves"));
+        Procedimento procedimento = procedimentos.salvar(new Procedimento(null, "Consulta"));
+        LocalDateTime dia = LocalDateTime.of(2099, 4, 12, 9, 0);
+
+        Agendamento maisTarde = Agendamento.reconstituir(null, paciente.getId(), 42L,
+                new PeriodoAtendimento(dia.plusHours(2), dia.plusHours(2).plusMinutes(30)),
+                StatusAgendamento.CONFIRMADO,
+                List.of(ProcedimentoAgendado.pendente(procedimento.getId())), null);
+        Agendamento maisCedo = Agendamento.reconstituir(null, paciente.getId(), 99L,
+                new PeriodoAtendimento(dia, dia.plusMinutes(30)),
+                StatusAgendamento.CONFIRMADO,
+                List.of(ProcedimentoAgendado.pendente(procedimento.getId())), null);
+        Agendamento outroPacienteAgendamento = Agendamento.reconstituir(null, outroPaciente.getId(), 42L,
+                new PeriodoAtendimento(dia.plusHours(1), dia.plusHours(1).plusMinutes(30)),
+                StatusAgendamento.CONFIRMADO,
+                List.of(ProcedimentoAgendado.pendente(procedimento.getId())), null);
+
+        agendamentos.salvar(maisTarde);
+        agendamentos.salvar(maisCedo);
+        agendamentos.salvar(outroPacienteAgendamento);
+
+        assertEquals(List.of(maisCedo.getId(), maisTarde.getId()),
+                agendamentos.buscarPorPaciente(paciente.getId()).stream()
+                        .map(Agendamento::getId)
+                        .toList());
+    }
 }
