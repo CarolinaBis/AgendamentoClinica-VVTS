@@ -124,7 +124,12 @@ class AgendamentoApiIntegrationTest {
 
         mockMvc.perform(get("/api/v1/agendamentos/{id}", agendamentoId + 1))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value("NOT_FOUND"));
+                .andExpect(jsonPath("$.status").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value(
+                        "Agendamento não encontrado(a): id " + (agendamentoId + 1) + "."))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage")
+                        .value("br.edu.ifsp.dominio.excecao.RecursoNaoEncontradoException"));
     }
 
     @Test
