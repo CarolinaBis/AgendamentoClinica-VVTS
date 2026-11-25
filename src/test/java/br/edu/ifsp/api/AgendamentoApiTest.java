@@ -135,6 +135,21 @@ class AgendamentoApiTest extends ApiTestBase {
                 .body("procedimentos[0].executado", equalTo(true));
     }
 
+    @Test
+    @DisplayName("DELETE /agendamentos/{id}/procedimentos/{procedimentoId} do único procedimento devolve 409")
+    void removerUnicoProcedimentoDevolve409() {
+        long pacienteId = criarPaciente(faker.name().fullName());
+        long procedimentoId = criarProcedimento("Consulta clínica");
+        long agendamentoId = agendar(pacienteId, 10L, proximaSegundaAs(9), procedimentoId);
+
+        comToken()
+                .when()
+                .delete("/agendamentos/{id}/procedimentos/{procedimentoId}", agendamentoId, procedimentoId)
+                .then()
+                .statusCode(409)
+                .body("status", equalTo("CONFLICT"));
+    }
+
     private long criarAgendamento() {
         long pacienteId = criarPaciente(faker.name().fullName());
         long procedimentoId = criarProcedimento("Consulta clínica");
