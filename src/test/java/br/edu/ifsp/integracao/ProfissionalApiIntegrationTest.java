@@ -2,6 +2,7 @@ package br.edu.ifsp.integracao;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,6 +15,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.time.LocalDate;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -41,6 +46,30 @@ class ProfissionalApiIntegrationTest {
 
         pacienteId = inserirPaciente("Maria da Silva");
         procedimentoId = inserirProcedimento("Consulta clinica");
+    }
+
+    @Test
+    void deveConsultarAgendaOrdenadaSemIncluirOutrosProfissionaisNemCancelados() throws Exception {
+        LocalDate dia = LocalDate.of(2026, 11, 25);
+        long profissionalId = 10;
+
+        long agendamentoMaisTarde = inserirAgendamento(
+                profissionalId, dia, "11:00", "11:30", "CONFIRMADO");
+        long agendamentoMaisCedo = inserirAgendamento(
+                profissionalId, dia, "09:00", "09:30", "CONFIRMADO");
+        inserirAgendamento(20, dia, "09:30", "10:00", "CONFIRMADO");
+        inserirAgendamento(profissionalId, dia, "10:00", "10:30", "CANCELADO");
+
+        mockMvc.perform(get("/api/v1/profissionais/{id}/agenda", profissionalId)
+                        .param("data", dia.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").value(dia.toString()))
+                .andExpect(jsonPath("$.expediente").value(true))
+                .andExpect(jsonPath("$.agendamentos.length()").value(2))
+                .andExpect(jsonPath("$.agendamentos[0].id").value(agendamentoMaisCedo))
+                .andExpect(jsonPath("$.agendamentos[1].id").value(agendamentoMaisTarde))
+                .andExpect(jsonPath("$.agendamentos[0].profissionalId").value(profissionalId))
+                .andExpect(jsonPath("$.agendamentos[1].profissionalId").value(profissionalId));
     }
 
     private long inserirPaciente(String nome) {
