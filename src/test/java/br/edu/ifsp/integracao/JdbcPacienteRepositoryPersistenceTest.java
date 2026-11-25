@@ -81,4 +81,9 @@ class JdbcPacienteRepositoryPersistenceTest {
     void deveRetornarVazioAoBuscarPacienteComIdNulo() {
         assertTrue(pacientes.buscarPorId(null).isEmpty());
     }
+
+    @Test
+    void deveRetornarVazioAoBuscarPacienteInexistente() {
+        assertTrue(pacientes.buscarPorId(Long.MAX_VALUE).isEmpty());
+    }
 }
