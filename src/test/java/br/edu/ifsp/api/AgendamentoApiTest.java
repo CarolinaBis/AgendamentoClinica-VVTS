@@ -163,6 +163,19 @@ class AgendamentoApiTest extends ApiTestBase {
                 .body("status", equalTo("CONFLICT"));
     }
 
+    @Test
+    @DisplayName("POST /agendamentos/{id}/falta antes do horário da consulta devolve 409")
+    void registrarFaltaAntesDoHorarioDevolve409() {
+        long agendamentoId = criarAgendamento();
+
+        comToken()
+                .when()
+                .post("/agendamentos/{id}/falta", agendamentoId)
+                .then()
+                .statusCode(409)
+                .body("status", equalTo("CONFLICT"));
+    }
+
     private long criarAgendamento() {
         long pacienteId = criarPaciente(faker.name().fullName());
         long procedimentoId = criarProcedimento("Consulta clínica");
