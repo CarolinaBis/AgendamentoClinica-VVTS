@@ -54,7 +54,19 @@ class AplicacaoUiTest extends UiTestBase {
         assertThat(app.statusDoPrimeiroAgendamentoListado()).isEqualTo("Confirmado");
     }
 
+    @Test
+    @DisplayName("Agendar fora do horário de funcionamento mostra mensagem de erro")
+    void agendarForaDoHorarioMostraErro() {
+        AppPage app = entrarComNovoUsuario();
+        long pacienteId = app.cadastrarPaciente(faker.name().fullName());
+        long procedimentoId = app.cadastrarProcedimento("Consulta clínica");
+        LocalDateTime inicio = proximaSegundaAs(19);
 
+        app.agendar(pacienteId, 10L, inicio, inicio.plusHours(1), procedimentoId);
+
+        app.aguardarErro();
+        assertThat(app.textoDoAviso()).doesNotContain("Consulta agendada");
+    }
 
     private LocalDateTime proximaSegundaAs(int hora) {
         return LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY)).atTime(hora, 0);
