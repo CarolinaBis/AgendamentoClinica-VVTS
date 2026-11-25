@@ -1,6 +1,7 @@
 package br.edu.ifsp.ui.pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -14,6 +15,7 @@ public class AuthenticationPage {
     private static final By NOTICE = By.id("aviso");
     private static final By APPLICATION = By.id("tela-app");
     private static final By USER_EMAIL = By.id("usuario-email");
+    private static final By USER_INFO = By.id("usuario");
 
     private final WebDriver driver;
     private final WebDriverWait wait;
@@ -36,6 +38,16 @@ public class AuthenticationPage {
 
     public boolean isApplicationVisible() {
         return driver.findElement(APPLICATION).isDisplayed();
+    }
+
+    public boolean isUserInfoVisible() {
+        return driver.findElement(USER_INFO).isDisplayed();
+    }
+
+    public boolean hasSessionToken() {
+        Object token = ((JavascriptExecutor) driver).executeScript(
+                "return sessionStorage.getItem('token');");
+        return token != null;
     }
 
     public String getNotice() {
@@ -76,5 +88,12 @@ public class AuthenticationPage {
 
     public void waitForNotice(String notice) {
         wait.until(ExpectedConditions.textToBe(NOTICE, notice));
+    }
+
+    public void logout() {
+        driver.findElement(By.id("sair")).click();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(LOGIN_FORM));
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(APPLICATION));
+        wait.until(ExpectedConditions.textToBe(NOTICE, "Você saiu."));
     }
 }

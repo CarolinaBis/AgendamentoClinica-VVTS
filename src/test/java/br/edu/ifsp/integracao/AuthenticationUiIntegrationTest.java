@@ -108,4 +108,22 @@ class AuthenticationUiIntegrationTest {
         assertFalse(authenticationPage.isApplicationVisible());
         assertEquals("Email already registered: " + email, authenticationPage.getNotice());
     }
+
+    @Test
+    void deveEncerrarSessaoAoSairDaAplicacao() {
+        String email = faker.internet().emailAddress();
+        String senha = faker.internet().password();
+        authenticationPage.register(
+                faker.name().firstName(), faker.name().lastName(), email, senha);
+        authenticationPage.login(email, senha);
+
+        assertTrue(authenticationPage.hasSessionToken());
+        authenticationPage.logout();
+
+        assertTrue(authenticationPage.isLoginFormVisible());
+        assertFalse(authenticationPage.isApplicationVisible());
+        assertFalse(authenticationPage.isUserInfoVisible());
+        assertFalse(authenticationPage.hasSessionToken());
+        assertEquals("Você saiu.", authenticationPage.getNotice());
+    }
 }
