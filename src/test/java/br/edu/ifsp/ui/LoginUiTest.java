@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import br.edu.ifsp.ui.pages.AppPage;
+
 @Tag("UiTest")
 class LoginUiTest extends UiTestBase {
 
@@ -31,6 +33,24 @@ class LoginUiTest extends UiTestBase {
 
         assertThat(login.formularioDeRegistroEstaValido()).isFalse();
         assertThat(login.textoDoAviso()).isEqualTo("Entre ou registre um usuário para começar.");
+    }
+
+    @Test
+    @DisplayName("Entrar com credenciais válidas leva à tela da aplicação com o e-mail no cabeçalho")
+    void entrarComCredenciaisValidasMostraAplicacao() {
+        String email = faker.internet().emailAddress();
+        LoginPage login = abrirSistema();
+        login.registrar(faker.name().firstName(), faker.name().lastName(), email, SENHA);
+        login.aguardarAviso("Usuário criado");
+
+        login.entrar(email, SENHA);
+
+        AppPage app = new AppPage(driver);
+        app.aguardarCarregar();
+        assertThat(app.estaVisivel()).isTrue();
+        assertThat(login.estaVisivel()).isFalse();
+        assertThat(app.emailDoUsuarioLogado()).isEqualTo(email);
+        app.aguardarAviso("Bem-vindo(a), " + email);
     }
 
 
