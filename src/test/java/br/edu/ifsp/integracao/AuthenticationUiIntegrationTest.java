@@ -92,4 +92,20 @@ class AuthenticationUiIntegrationTest {
         assertFalse(authenticationPage.isApplicationVisible());
         assertEquals(avisoInicial, authenticationPage.getNotice());
     }
+
+    @Test
+    void deveExibirConflitoAoCadastrarEmailJaUtilizado() {
+        String email = faker.internet().emailAddress();
+        String senha = faker.internet().password();
+        authenticationPage.register(
+                faker.name().firstName(), faker.name().lastName(), email, senha);
+
+        authenticationPage.submitRegistration(
+                faker.name().firstName(), faker.name().lastName(), email, senha);
+        authenticationPage.waitForNotice("Email already registered: " + email);
+
+        assertTrue(authenticationPage.isLoginFormVisible());
+        assertFalse(authenticationPage.isApplicationVisible());
+        assertEquals("Email already registered: " + email, authenticationPage.getNotice());
+    }
 }
