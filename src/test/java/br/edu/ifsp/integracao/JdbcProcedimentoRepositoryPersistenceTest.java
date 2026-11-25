@@ -91,4 +91,9 @@ class JdbcProcedimentoRepositoryPersistenceTest {
     void deveIndicarQueProcedimentoComIdNuloNaoExiste() {
         assertFalse(procedimentos.existePorId(null));
     }
+
+    @Test
+    void deveListarVazioQuandoNaoHaProcedimentos() {
+        assertTrue(procedimentos.listar().isEmpty());
+    }
 }
