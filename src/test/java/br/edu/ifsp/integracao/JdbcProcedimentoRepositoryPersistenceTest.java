@@ -45,4 +45,16 @@ class JdbcProcedimentoRepositoryPersistenceTest {
         assertEquals("Consulta", jdbc.queryForObject(
                 "SELECT nome FROM procedimento WHERE id = ?", String.class, salvo.getId()));
     }
+
+    @Test
+    void deveAtualizarProcedimentoExistente() {
+        Procedimento original = procedimentos.salvar(new Procedimento(null, "Consulta"));
+        Procedimento atualizado = new Procedimento(original.getId(), "Retorno");
+
+        procedimentos.salvar(atualizado);
+
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM procedimento", Integer.class));
+        assertEquals("Retorno", jdbc.queryForObject(
+                "SELECT nome FROM procedimento WHERE id = ?", String.class, original.getId()));
+    }
 }
