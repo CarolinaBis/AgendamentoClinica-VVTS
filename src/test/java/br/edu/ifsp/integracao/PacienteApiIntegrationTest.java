@@ -210,4 +210,18 @@ class PacienteApiIntegrationTest {
                 .andExpect(jsonPath("$.developerMessage")
                         .value("br.edu.ifsp.dominio.excecao.IntervaloInvalidoException"));
     }
+
+    @Test
+    void deveRetornar400QuandoStatusDoHistoricoForInvalido() throws Exception {
+        long pacienteId = cadastrarPaciente("Maria da Silva");
+
+        mockMvc.perform(get("/api/v1/pacientes/{id}/agendamentos", pacienteId)
+                        .param("status", "desconhecido"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.message").value(
+                        "No enum constant br.edu.ifsp.dominio.agendamento.StatusAgendamento.DESCONHECIDO"))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage").value("java.lang.IllegalArgumentException"));
+    }
 }
