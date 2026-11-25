@@ -87,6 +87,21 @@ class ProfissionalApiIntegrationTest {
                 .andExpect(jsonPath("$.agendamentos.length()").value(0));
     }
 
+    @Test
+    void deveRetornarAgendaVaziaESemExpedienteNoFimDeSemana() throws Exception {
+        LocalDate sabado = LocalDate.of(2026, 11, 28);
+        inserirAgendamento(10, sabado, "09:00", "09:30", "CONFIRMADO");
+
+        mockMvc.perform(get("/api/v1/profissionais/{id}/agenda", 10)
+                        .param("data", sabado.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").value(sabado.toString()))
+                .andExpect(jsonPath("$.expediente").value(false))
+                .andExpect(jsonPath("$.mensagem").value("Não há expediente nesse dia."))
+                .andExpect(jsonPath("$.agendamentos").isArray())
+                .andExpect(jsonPath("$.agendamentos.length()").value(0));
+    }
+
     private long inserirPaciente(String nome) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
