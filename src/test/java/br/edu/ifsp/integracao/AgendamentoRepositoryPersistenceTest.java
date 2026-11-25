@@ -76,4 +76,35 @@ class AgendamentoRepositoryPersistenceTest {
                 "SELECT COUNT(*) FROM agendamento_procedimento WHERE agendamento_id = ?",
                 Integer.class, agendamento.getId()));
     }
+
+    @Test
+    void deveRecuperarAgendamentoComDadosEProcedimentosPersistidos() {
+        Paciente paciente = pacientes.salvar(Paciente.novo("Ana Souza"));
+        Procedimento primeiro = procedimentos.salvar(new Procedimento(null, "Avaliação"));
+        Procedimento segundo = procedimentos.salvar(new Procedimento(null, "Retorno"));
+        LocalDateTime inicio = LocalDateTime.of(2099, 2, 10, 9, 0);
+        LocalDateTime realizadoEm = inicio.plusMinutes(45);
+
+        Agendamento agendamento = Agendamento.reconstituir(null, paciente.getId(), 42L,
+                new PeriodoAtendimento(inicio, inicio.plusMinutes(30)),
+                StatusAgendamento.REALIZADO,
+                List.of(
+                        ProcedimentoAgendado.reconstituir(primeiro.getId(), true),
+                        ProcedimentoAgendado.reconstituir(segundo.getId(), true)),
+                realizadoEm);
+        agendamentos.salvar(agendamento);
+
+        Agendamento recuperado = agendamentos.buscarPorId(agendamento.getId()).orElseThrow();
+
+        assertEquals(agendamento.getId(), recuperado.getId());
+        assertEquals(paciente.getId(), recuperado.getPacienteId());
+        assertEquals(42L, recuperado.getProfissionalId());
+        assertEquals(inicio, recuperado.getPeriodo().inicio());
+        assertEquals(inicio.plusMinutes(30), recuperado.getPeriodo().fim());
+        assertEquals(StatusAgendamento.REALIZADO, recuperado.getStatus());
+        assertEquals(realizadoEm, recuperado.getRealizadoEm());
+        assertEquals(List.of(primeiro.getId(), segundo.getId()), recuperado.getProcedimentoIds());
+        assertTrue(recuperado.getProcedimentos().stream().allMatch(
+                ProcedimentoAgendado::isExecutado));
+    }
 }
