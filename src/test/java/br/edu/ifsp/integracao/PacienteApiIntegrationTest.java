@@ -194,4 +194,20 @@ class PacienteApiIntegrationTest {
                 .andExpect(jsonPath("$[?(@.id == " + antesDoPeriodo + ")]").isEmpty())
                 .andExpect(jsonPath("$[?(@.id == " + depoisDoPeriodo + ")]").isEmpty());
     }
+
+    @Test
+    void deveRetornar400QuandoDataFinalDoHistoricoForAnteriorADataInicial() throws Exception {
+        long pacienteId = cadastrarPaciente("Maria da Silva");
+
+        mockMvc.perform(get("/api/v1/pacientes/{id}/agendamentos", pacienteId)
+                        .param("de", "2099-01-08")
+                        .param("ate", "2099-01-06"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.message")
+                        .value("Intervalo inválido: a data final é anterior à data inicial."))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage")
+                        .value("br.edu.ifsp.dominio.excecao.IntervaloInvalidoException"));
+    }
 }
