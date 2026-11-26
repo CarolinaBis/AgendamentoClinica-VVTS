@@ -331,6 +331,40 @@ class AgendamentoApiIntegrationTest {
     }
 
     @Test
+    void deveImpedirRemocaoDeProcedimentoJaExecutado() throws Exception {
+        MvcResult resultado = mockMvc.perform(post("/api/v1/agendamentos")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "pacienteId": %d,
+                                  "profissionalId": 10,
+                                  "inicio": "2099-01-05T09:00:00",
+                                  "fim": "2099-01-05T09:30:00",
+                                  "procedimentoIds": [%d, %d]
+                                }
+                                """.formatted(pacienteId, procedimentoId, segundoProcedimentoId)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        long agendamentoId = ((Number) JsonPath.read(
+                resultado.getResponse().getContentAsString(), "$.id")).longValue();
+
+        mockMvc.perform(post("/api/v1/agendamentos/{id}/procedimentos/{procedimentoId}/execucao",
+                        agendamentoId, procedimentoId))
+                .andExpect(status().isOk());
+
+        MvcResult remocao = mockMvc.perform(delete(
+                        "/api/v1/agendamentos/{id}/procedimentos/{procedimentoId}",
+                        agendamentoId, procedimentoId))
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(409, remocao.getResponse().getStatus()),
+                () -> assertEquals(2, jdbc.queryForObject(
+                        "SELECT COUNT(*) FROM agendamento_procedimento WHERE agendamento_id = ?",
+                        Integer.class, agendamentoId)));
+    }
+
+    @Test
     void deveExecutarProcedimentoERetornar404QuandoNaoPertencerAoAgendamento() throws Exception {
         MvcResult resultado = mockMvc.perform(post("/api/v1/agendamentos")
                         .contentType(APPLICATION_JSON)
