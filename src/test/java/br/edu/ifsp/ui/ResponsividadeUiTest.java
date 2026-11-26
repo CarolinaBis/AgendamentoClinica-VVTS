@@ -40,6 +40,15 @@ class ResponsividadeUiTest extends UiTestBase {
         assertThat(login.temRolagemHorizontal()).isFalse();
     }
 
+    @Test
+    @DisplayName("Em tela de celular pequeno (320 px), a página não tem rolagem horizontal")
+    void emCelularPequenoNaoHaRolagemHorizontal() {
+        emularTela(320, 640);
+        LoginPage login = abrirSistema();
+
+        assertThat(login.temRolagemHorizontal()).isFalse();
+    }
+
     private void emularTela(int largura, int altura) {
         driver.executeCdpCommand("Emulation.setDeviceMetricsOverride", Map.of(
                 "width", largura, "height", altura, "deviceScaleFactor", 1, "mobile", largura < 768));
