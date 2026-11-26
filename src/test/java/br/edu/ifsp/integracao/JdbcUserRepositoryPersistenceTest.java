@@ -10,10 +10,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.UncategorizedSQLException;
 
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(properties = "spring.datasource.url=jdbc:sqlite:target/user-persistence-tests.db")
@@ -82,5 +84,16 @@ class JdbcUserRepositoryPersistenceTest {
     @Test
     void deveRetornarVazioAoBuscarUsuarioPorEmailNulo() {
         assertTrue(usuarios.findByEmail(null).isEmpty());
+    }
+
+    @Test
+    void deveImpedirDoisUsuariosComMesmoEmail() {
+        usuarios.save(new User(UUID.randomUUID(), "Ana", "Souza", "ana@example.com",
+                "senha-hash", Role.USER));
+        User duplicado = new User(UUID.randomUUID(), "Beatriz", "Costa", "ana@example.com",
+                "outra-senha-hash", Role.ADMIN);
+
+        assertThrows(UncategorizedSQLException.class, () -> usuarios.save(duplicado));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM app_user", Integer.class));
     }
 }
