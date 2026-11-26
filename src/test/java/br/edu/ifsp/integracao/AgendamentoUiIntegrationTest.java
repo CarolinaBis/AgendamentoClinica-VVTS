@@ -110,6 +110,19 @@ class AgendamentoUiIntegrationTest {
     }
 
     @Test
+    void deveExigirAoMenosUmProcedimentoParaAgendar() {
+        JavascriptExecutor javascript = (JavascriptExecutor) driver;
+        javascript.executeScript("""
+                document.querySelector("#form-agendar [name='pacienteId']").value = "1";
+                document.querySelector("#form-agendar [name='profissionalId']").value = "10";
+                document.querySelector("#form-agendar [name='inicio']").value = "2099-01-05T09:00";
+                document.querySelector("#form-agendar [name='fim']").value = "2099-01-05T09:30";
+                """);
+
+        assertEquals(1, clinicDashboardPage.getInvalidAppointmentFieldCount());
+    }
+
+    @Test
     void deveExibirTabelaDeAgendamentoSemRolagemHorizontalEmLarguraDe320Pixels() {
         criarAgendamentoFuturo();
         ((ChromeDriver) driver).executeCdpCommand("Emulation.setDeviceMetricsOverride",
