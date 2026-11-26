@@ -73,6 +73,10 @@ public class AuthenticationPage {
                 By.cssSelector("#form-registrar input[name='email']:invalid")).isEmpty();
     }
 
+    public int getInvalidRegistrationFieldCount() {
+        return driver.findElements(By.cssSelector("#form-registrar :invalid")).size();
+    }
+
     public void login(String email, String password) {
         submitLogin(email, password);
 
