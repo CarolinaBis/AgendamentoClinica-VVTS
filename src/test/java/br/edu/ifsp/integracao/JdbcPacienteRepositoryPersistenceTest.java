@@ -78,6 +78,20 @@ class JdbcPacienteRepositoryPersistenceTest {
     }
 
     @Test
+    void deveRemoverTodasAsFaltasAoAtualizarPacienteSemFaltas() {
+        Paciente original = Paciente.novo("Joao da Silva");
+        original.registrarFalta(new Falta(10L, LocalDateTime.of(2026, 11, 23, 9, 0)));
+        pacientes.salvar(original);
+        Paciente atualizado = Paciente.reconstituir(original.getId(), "Joao da Silva", List.of());
+
+        pacientes.salvar(atualizado);
+
+        assertEquals(0, jdbc.queryForObject(
+                "SELECT COUNT(*) FROM falta WHERE paciente_id = ?", Integer.class, original.getId()));
+        assertTrue(pacientes.buscarPorId(original.getId()).orElseThrow().getFaltas().isEmpty());
+    }
+
+    @Test
     void deveRetornarVazioAoBuscarPacienteComIdNulo() {
         assertTrue(pacientes.buscarPorId(null).isEmpty());
     }
