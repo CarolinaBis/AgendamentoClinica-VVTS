@@ -81,4 +81,33 @@ class AuthenticationApiIntegrationTest {
         assertEquals(Role.USER, usuario.getRole());
         assertTrue(passwordEncoder.matches(senha, usuario.getPassword()));
     }
+
+    @Test
+    void deveRetornarConflitoAoRegistrarEmailJaUtilizado() throws Exception {
+        String email = "ana.souza@example.com";
+        String cadastro = """
+                {
+                  "name": "Pedro",
+                  "lastname": "Moraes",
+                  "email": "%s",
+                  "password": "Senha-forte-123!"
+                }
+                """.formatted(email);
+        mockMvc.perform(post("/api/v1/register")
+                        .contentType(APPLICATION_JSON)
+                        .content(cadastro))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/v1/register")
+                        .contentType(APPLICATION_JSON)
+                        .content(cadastro))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value("CONFLICT"))
+                .andExpect(jsonPath("$.message").value("Email already registered: " + email))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.developerMessage")
+                        .value("br.edu.ifsp.exception.EntityAlreadyExistsException"));
+
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM app_user", Integer.class));
+    }
 }
