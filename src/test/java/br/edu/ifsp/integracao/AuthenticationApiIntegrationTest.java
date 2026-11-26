@@ -134,6 +134,27 @@ class AuthenticationApiIntegrationTest {
     }
 
     @Test
+    void deveRejeitarCadastroComSenhaVazia() throws Exception {
+        String email = "ana.souza@example.com";
+        MvcResult resultado = mockMvc.perform(post("/api/v1/register")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Ana",
+                                  "lastname": "Souza",
+                                  "email": "%s",
+                                  "password": ""
+                                }
+                                """.formatted(email)))
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(400, resultado.getResponse().getStatus()),
+                () -> assertEquals(0, jdbc.queryForObject(
+                        "SELECT COUNT(*) FROM app_user WHERE email = ?", Integer.class, email)));
+    }
+
+    @Test
     void deveAutenticarUsuarioERetornarToken() throws Exception {
         String email = "ana.souza@example.com";
         String senha = "Senha-forte-123!";
