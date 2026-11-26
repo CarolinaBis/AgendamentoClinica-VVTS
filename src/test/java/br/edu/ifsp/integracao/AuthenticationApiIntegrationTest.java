@@ -129,4 +129,21 @@ class AuthenticationApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty());
     }
+
+    @Test
+    void deveRetornar401AoAutenticarComSenhaIncorreta() throws Exception {
+        String email = "ana.souza@example.com";
+        usuarios.save(new User(UUID.randomUUID(), "Ana", "Souza", email,
+                passwordEncoder.encode("Senha-correta-123!"), Role.USER));
+
+        mockMvc.perform(post("/api/v1/authenticate")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "%s",
+                                  "password": "Senha-incorreta-123!"
+                                }
+                                """.formatted(email)))
+                .andExpect(status().isUnauthorized());
+    }
 }
