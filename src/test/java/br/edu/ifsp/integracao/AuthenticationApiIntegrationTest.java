@@ -146,4 +146,17 @@ class AuthenticationApiIntegrationTest {
                                 """.formatted(email)))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void deveRetornar401AoAutenticarUsuarioInexistente() throws Exception {
+        mockMvc.perform(post("/api/v1/authenticate")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "inexistente@example.com",
+                                  "password": "Senha-forte-123!"
+                                }
+                                """))
+                .andExpect(status().isUnauthorized());
+    }
 }
