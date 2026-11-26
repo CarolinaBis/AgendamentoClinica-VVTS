@@ -96,4 +96,26 @@ class JdbcUserRepositoryPersistenceTest {
         assertThrows(UncategorizedSQLException.class, () -> usuarios.save(duplicado));
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM app_user", Integer.class));
     }
+
+    @Test
+    void deveImpedirAtualizacaoComEmailJaUtilizado() {
+        UUID primeiroId = UUID.randomUUID();
+        UUID segundoId = UUID.randomUUID();
+        usuarios.save(new User(primeiroId, "Ana", "Souza", "ana@example.com",
+                "senha-hash", Role.USER));
+        usuarios.save(new User(segundoId, "Beatriz", "Costa", "beatriz@example.com",
+                "outra-senha-hash", Role.ADMIN));
+        User atualizado = new User(primeiroId, "Ana Maria", "Souza", "beatriz@example.com",
+                "senha-nova", Role.ADMIN);
+
+        assertThrows(UncategorizedSQLException.class, () -> usuarios.save(atualizado));
+
+        User anaPersistida = usuarios.findByEmail("ana@example.com").orElseThrow();
+        User beatrizPersistida = usuarios.findByEmail("beatriz@example.com").orElseThrow();
+        assertEquals(primeiroId, anaPersistida.getId());
+        assertEquals("Ana", anaPersistida.getName());
+        assertEquals(segundoId, beatrizPersistida.getId());
+        assertEquals("Beatriz", beatrizPersistida.getName());
+        assertEquals(2, jdbc.queryForObject("SELECT COUNT(*) FROM app_user", Integer.class));
+    }
 }
