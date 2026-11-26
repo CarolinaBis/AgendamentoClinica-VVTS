@@ -7,6 +7,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -18,6 +19,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -105,6 +107,24 @@ class AgendamentoUiIntegrationTest {
         assertEquals(4, clinicDashboardPage.getInvalidAppointmentFieldCount());
         assertEquals(avisoInicial, clinicDashboardPage.getNotice());
         assertFalse(clinicDashboardPage.hasResultTable());
+    }
+
+    @Test
+    void deveExibirTabelaDeAgendamentoSemRolagemHorizontalEmLarguraDe320Pixels() {
+        criarAgendamentoFuturo();
+        ((ChromeDriver) driver).executeCdpCommand("Emulation.setDeviceMetricsOverride",
+                Map.of("width", 320, "height", 900, "deviceScaleFactor", 1, "mobile", true));
+        JavascriptExecutor javascript = (JavascriptExecutor) driver;
+
+        Number larguraVisivel = (Number) javascript.executeScript(
+                "return document.documentElement.clientWidth;");
+        Number larguraDocumento = (Number) javascript.executeScript(
+                "return document.documentElement.scrollWidth;");
+
+        assertTrue(larguraDocumento.intValue() <= larguraVisivel.intValue(),
+                "A tabela de agendamentos não deve causar rolagem horizontal em 320 px. "
+                        + "Largura visível: " + larguraVisivel
+                        + "; largura do conteúdo: " + larguraDocumento);
     }
 
     private AgendamentoDeTeste criarAgendamentoFuturo() {
