@@ -27,6 +27,19 @@ class ResponsividadeUiTest extends UiTestBase {
         assertThat(login.temRolagemHorizontal()).isFalse();
     }
 
+    @Test
+    @DisplayName("Em tela de celular (375 px), os cards ficam empilhados e sem rolagem horizontal")
+    void emCelularCardsFicamEmpilhados() {
+        emularTela(375, 812);
+        LoginPage login = abrirSistema();
+
+        Rectangle entrar = login.areaDoCardEntrar();
+        Rectangle registrar = login.areaDoCardRegistrar();
+
+        assertThat(registrar.getY()).isGreaterThan(entrar.getY());
+        assertThat(login.temRolagemHorizontal()).isFalse();
+    }
+
     private void emularTela(int largura, int altura) {
         driver.executeCdpCommand("Emulation.setDeviceMetricsOverride", Map.of(
                 "width", largura, "height", altura, "deviceScaleFactor", 1, "mobile", largura < 768));
