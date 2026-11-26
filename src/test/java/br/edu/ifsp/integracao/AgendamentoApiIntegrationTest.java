@@ -17,6 +17,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -93,6 +95,26 @@ class AgendamentoApiIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").isNotEmpty())
                 .andExpect(jsonPath("$.developerMessage")
                         .value("br.edu.ifsp.dominio.excecao.ForaDoHorarioDeFuncionamentoException"));
+    }
+
+    @Test
+    void deveRetornar400QuandoPacienteIdNaoForInformado() throws Exception {
+        MvcResult resultado = mockMvc.perform(post("/api/v1/agendamentos")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "profissionalId": 10,
+                                  "inicio": "2099-01-05T09:00:00",
+                                  "fim": "2099-01-05T09:30:00",
+                                  "procedimentoIds": [%d]
+                                }
+                                """.formatted(procedimentoId)))
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(400, resultado.getResponse().getStatus()),
+                () -> assertEquals(0, jdbc.queryForObject(
+                        "SELECT COUNT(*) FROM agendamento", Integer.class)));
     }
 
     @Test
