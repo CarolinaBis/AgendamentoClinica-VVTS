@@ -22,6 +22,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -304,6 +305,20 @@ class AgendamentoRepositoryPersistenceTest {
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM agendamento", Integer.class));
         assertEquals(0, jdbc.queryForObject(
                 "SELECT COUNT(*) FROM agendamento_procedimento", Integer.class));
+    }
+
+    @Test
+    void deveManterIdNuloQuandoInsercaoDeAgendamentoFalha() {
+        Paciente paciente = pacientes.salvar(Paciente.novo("Marcos Rocha"));
+        LocalDateTime inicio = LocalDateTime.of(2099, 5, 20, 9, 0);
+        Agendamento agendamento = Agendamento.reconstituir(null, paciente.getId(), 42L,
+                new PeriodoAtendimento(inicio, inicio.plusMinutes(30)),
+                StatusAgendamento.CONFIRMADO,
+                List.of(ProcedimentoAgendado.pendente(Long.MAX_VALUE)), null);
+
+        assertThrows(UncategorizedSQLException.class, () -> agendamentos.salvar(agendamento));
+
+        assertNull(agendamento.getId());
     }
 
     @Test
