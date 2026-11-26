@@ -3,6 +3,7 @@ package br.edu.ifsp.infraestrutura.persistencia;
 import br.edu.ifsp.dominio.agendamento.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +26,7 @@ public class JdbcAgendamentoRepository implements AgendamentoRepository {
     }
 
     @Override
+    @Transactional
     public Agendamento salvar(Agendamento agendamento) {
         String realizadoEm = agendamento.getRealizadoEm() == null ? null : agendamento.getRealizadoEm().toString();
         if (agendamento.getId() == null) {

@@ -241,6 +241,31 @@ class AgendamentoRepositoryPersistenceTest {
     }
 
     @Test
+    void deveManterAgendamentoIntactoSeAtualizacaoReferenciarProcedimentoInexistente() {
+        Paciente paciente = pacientes.salvar(Paciente.novo("Marcos Rocha"));
+        Procedimento procedimento = procedimentos.salvar(new Procedimento(null, "Avaliação"));
+        LocalDateTime inicioOriginal = LocalDateTime.of(2099, 5, 17, 9, 0);
+        Agendamento original = Agendamento.reconstituir(null, paciente.getId(), 42L,
+                new PeriodoAtendimento(inicioOriginal, inicioOriginal.plusMinutes(30)),
+                StatusAgendamento.CONFIRMADO,
+                List.of(ProcedimentoAgendado.pendente(procedimento.getId())), null);
+        agendamentos.salvar(original);
+
+        LocalDateTime novoInicio = inicioOriginal.plusDays(1);
+        Agendamento atualizado = Agendamento.reconstituir(original.getId(), paciente.getId(), 42L,
+                new PeriodoAtendimento(novoInicio, novoInicio.plusMinutes(30)),
+                StatusAgendamento.REALIZADO,
+                List.of(ProcedimentoAgendado.pendente(Long.MAX_VALUE)), novoInicio.plusMinutes(40));
+
+        assertThrows(UncategorizedSQLException.class, () -> agendamentos.salvar(atualizado));
+
+        Agendamento recuperado = agendamentos.buscarPorId(original.getId()).orElseThrow();
+        assertEquals(inicioOriginal, recuperado.getPeriodo().inicio());
+        assertEquals(StatusAgendamento.CONFIRMADO, recuperado.getStatus());
+        assertEquals(List.of(procedimento.getId()), recuperado.getProcedimentoIds());
+    }
+
+    @Test
     void deveRetornarVazioAoBuscarAgendamentoInexistente() {
         assertTrue(agendamentos.buscarPorId(Long.MAX_VALUE).isEmpty());
     }
