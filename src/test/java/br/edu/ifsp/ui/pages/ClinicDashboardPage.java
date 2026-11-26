@@ -35,6 +35,11 @@ public class ClinicDashboardPage {
         return generatedId("Paciente cadastrado: id ");
     }
 
+    public void submitPatientRegistration(String name) {
+        driver.findElement(By.cssSelector("#form-paciente [name='nome']")).sendKeys(name);
+        driver.findElement(By.id("btn-cadastrar-paciente")).click();
+    }
+
     public long registerProcedure(String name) {
         driver.findElement(By.cssSelector("#form-procedimento [name='nome']")).sendKeys(name);
         driver.findElement(By.id("btn-cadastrar-procedimento")).click();
@@ -113,6 +118,10 @@ public class ClinicDashboardPage {
 
     public String getNotice() {
         return driver.findElement(NOTICE).getText();
+    }
+
+    public void waitForNotice(String notice) {
+        wait.until(ExpectedConditions.textToBe(NOTICE, notice));
     }
 
     public boolean hasResultTable() {

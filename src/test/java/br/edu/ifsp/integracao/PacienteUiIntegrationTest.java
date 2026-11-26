@@ -13,6 +13,7 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(
@@ -67,5 +68,15 @@ class PacienteUiIntegrationTest {
         String resultado = clinicDashboardPage.getPatientResult();
         assertTrue(resultado.contains("\"id\": " + id));
         assertTrue(resultado.contains("\"nome\": \"" + nome + "\""));
+    }
+
+    @Test
+    void deveRejeitarCadastroComNomeFormadoApenasPorEspacos() {
+        clinicDashboardPage.submitPatientRegistration("   ");
+
+        String mensagem = "O nome do paciente é obrigatório.";
+        clinicDashboardPage.waitForNotice(mensagem);
+
+        assertEquals(mensagem, clinicDashboardPage.getNotice());
     }
 }
