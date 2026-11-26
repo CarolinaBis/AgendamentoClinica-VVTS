@@ -19,6 +19,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(
@@ -93,6 +95,16 @@ class AgendamentoUiIntegrationTest {
         assertTrue(resultado.contains(Long.toString(agendamento.profissionalId())));
         assertTrue(resultado.contains(agendamento.inicio().format(DATE_TIME_DISPLAY)));
         assertTrue(resultado.contains(Long.toString(agendamento.procedimentoId())));
+    }
+
+    @Test
+    void deveImpedirAgendamentoQuandoCamposObrigatoriosEstaoVazios() {
+        String avisoInicial = clinicDashboardPage.getNotice();
+        clinicDashboardPage.submitEmptyAppointment();
+
+        assertEquals(4, clinicDashboardPage.getInvalidAppointmentFieldCount());
+        assertEquals(avisoInicial, clinicDashboardPage.getNotice());
+        assertFalse(clinicDashboardPage.hasResultTable());
     }
 
     private AgendamentoDeTeste criarAgendamentoFuturo() {

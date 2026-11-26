@@ -69,6 +69,14 @@ public class ClinicDashboardPage {
         wait.until(ExpectedConditions.visibilityOfElementLocated(RESULT_TABLE));
     }
 
+    public void submitEmptyAppointment() {
+        driver.findElement(By.id("btn-agendar")).click();
+    }
+
+    public int getInvalidAppointmentFieldCount() {
+        return driver.findElements(By.cssSelector("#form-agendar :invalid")).size();
+    }
+
     public void consultProfessionalAgenda(long professionalId, String date) {
         driver.findElement(By.cssSelector("#form-agenda [name='profissionalId']"))
                 .sendKeys(Long.toString(professionalId));
@@ -105,6 +113,10 @@ public class ClinicDashboardPage {
 
     public String getNotice() {
         return driver.findElement(NOTICE).getText();
+    }
+
+    public boolean hasResultTable() {
+        return !driver.findElements(RESULT_TABLE).isEmpty();
     }
 
     public String getPatientResult() {
