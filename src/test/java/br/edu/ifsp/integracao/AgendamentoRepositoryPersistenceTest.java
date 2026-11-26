@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -106,6 +107,23 @@ class AgendamentoRepositoryPersistenceTest {
         assertEquals(List.of(primeiro.getId(), segundo.getId()), recuperado.getProcedimentoIds());
         assertTrue(recuperado.getProcedimentos().stream().allMatch(
                 ProcedimentoAgendado::isExecutado));
+    }
+
+    @Test
+    void deveRecuperarProcedimentoPendenteComoNaoExecutado() {
+        Paciente paciente = pacientes.salvar(Paciente.novo("Ana Souza"));
+        Procedimento procedimento = procedimentos.salvar(new Procedimento(null, "Consulta"));
+        LocalDateTime inicio = LocalDateTime.of(2099, 2, 11, 9, 0);
+        Agendamento agendamento = Agendamento.reconstituir(null, paciente.getId(), 42L,
+                new PeriodoAtendimento(inicio, inicio.plusMinutes(30)),
+                StatusAgendamento.CONFIRMADO,
+                List.of(ProcedimentoAgendado.pendente(procedimento.getId())), null);
+        agendamentos.salvar(agendamento);
+
+        Agendamento recuperado = agendamentos.buscarPorId(agendamento.getId()).orElseThrow();
+
+        assertEquals(List.of(procedimento.getId()), recuperado.getProcedimentoIds());
+        assertFalse(recuperado.getProcedimentos().get(0).isExecutado());
     }
 
     @Test
