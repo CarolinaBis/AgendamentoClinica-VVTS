@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -109,6 +110,27 @@ class AuthenticationApiIntegrationTest {
                         .value("br.edu.ifsp.exception.EntityAlreadyExistsException"));
 
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM app_user", Integer.class));
+    }
+
+    @Test
+    void deveRejeitarCadastroComEmailInvalido() throws Exception {
+        String email = "email-invalido";
+        MvcResult resultado = mockMvc.perform(post("/api/v1/register")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Ana",
+                                  "lastname": "Souza",
+                                  "email": "%s",
+                                  "password": "Senha-forte-123!"
+                                }
+                                """.formatted(email)))
+                .andReturn();
+
+        assertAll(
+                () -> assertEquals(400, resultado.getResponse().getStatus()),
+                () -> assertEquals(0, jdbc.queryForObject(
+                        "SELECT COUNT(*) FROM app_user WHERE email = ?", Integer.class, email)));
     }
 
     @Test
