@@ -78,4 +78,9 @@ class JdbcUserRepositoryPersistenceTest {
     void deveRetornarVazioAoBuscarUsuarioPorEmailInexistente() {
         assertTrue(usuarios.findByEmail("inexistente@example.com").isEmpty());
     }
+
+    @Test
+    void deveRetornarVazioAoBuscarUsuarioPorEmailNulo() {
+        assertTrue(usuarios.findByEmail(null).isEmpty());
+    }
 }
