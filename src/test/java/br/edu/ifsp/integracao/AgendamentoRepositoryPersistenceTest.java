@@ -218,6 +218,29 @@ class AgendamentoRepositoryPersistenceTest {
     }
 
     @Test
+    void deveRemoverProcedimentosAssociadosAoAtualizarComListaVazia() {
+        Paciente paciente = pacientes.salvar(Paciente.novo("Marcos Rocha"));
+        Procedimento procedimento = procedimentos.salvar(new Procedimento(null, "Avaliação"));
+        LocalDateTime inicio = LocalDateTime.of(2099, 5, 16, 9, 0);
+        Agendamento original = Agendamento.reconstituir(null, paciente.getId(), 42L,
+                new PeriodoAtendimento(inicio, inicio.plusMinutes(30)),
+                StatusAgendamento.CONFIRMADO,
+                List.of(ProcedimentoAgendado.pendente(procedimento.getId())), null);
+        agendamentos.salvar(original);
+        Agendamento atualizado = Agendamento.reconstituir(original.getId(), paciente.getId(), 42L,
+                new PeriodoAtendimento(inicio, inicio.plusMinutes(30)),
+                StatusAgendamento.CONFIRMADO, List.of(), null);
+
+        agendamentos.salvar(atualizado);
+
+        Agendamento recuperado = agendamentos.buscarPorId(original.getId()).orElseThrow();
+        assertTrue(recuperado.getProcedimentos().isEmpty());
+        assertEquals(0, jdbc.queryForObject(
+                "SELECT COUNT(*) FROM agendamento_procedimento WHERE agendamento_id = ?",
+                Integer.class, original.getId()));
+    }
+
+    @Test
     void deveRetornarVazioAoBuscarAgendamentoInexistente() {
         assertTrue(agendamentos.buscarPorId(Long.MAX_VALUE).isEmpty());
     }
