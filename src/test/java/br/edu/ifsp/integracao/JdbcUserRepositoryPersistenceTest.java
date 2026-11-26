@@ -73,4 +73,9 @@ class JdbcUserRepositoryPersistenceTest {
         assertTrue(usuarios.findByEmail("ana@example.com").isEmpty());
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM app_user", Integer.class));
     }
+
+    @Test
+    void deveRetornarVazioAoBuscarUsuarioPorEmailInexistente() {
+        assertTrue(usuarios.findByEmail("inexistente@example.com").isEmpty());
+    }
 }
