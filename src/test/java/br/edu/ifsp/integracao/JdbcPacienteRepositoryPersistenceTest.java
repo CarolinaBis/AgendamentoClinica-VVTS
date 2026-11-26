@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -16,6 +17,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(properties = "spring.datasource.url=jdbc:sqlite:target/paciente-persistence-tests.db?foreign_keys=on")
@@ -134,5 +136,13 @@ class JdbcPacienteRepositoryPersistenceTest {
                 new Falta(20L, LocalDateTime.of(2026, 11, 24, 9, 0)),
                 new Falta(30L, LocalDateTime.of(2026, 11, 25, 9, 0))),
                 recuperado.getFaltas());
+    }
+
+    @Test
+    void deveImpedirFaltaAssociadaAAgendamentoInexistente() {
+        Paciente paciente = Paciente.novo("Ana Souza");
+        paciente.registrarFalta(new Falta(Long.MAX_VALUE, LocalDateTime.of(2026, 11, 25, 9, 0)));
+
+        assertThrows(DataIntegrityViolationException.class, () -> pacientes.salvar(paciente));
     }
 }
