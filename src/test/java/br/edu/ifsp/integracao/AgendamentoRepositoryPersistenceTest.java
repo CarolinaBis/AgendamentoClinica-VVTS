@@ -218,6 +218,31 @@ class AgendamentoRepositoryPersistenceTest {
     }
 
     @Test
+    void devePersistirPacienteEProfissionalAoAtualizarAgendamento() {
+        Paciente pacienteOriginal = pacientes.salvar(Paciente.novo("Carlos Alexandre"));
+        Paciente novoPaciente = pacientes.salvar(Paciente.novo("Pedro Moraes"));
+        Procedimento procedimento = procedimentos.salvar(new Procedimento(null, "Avaliação"));
+        LocalDateTime inicio = LocalDateTime.now().plusDays(1)
+                .withHour(9).withMinute(0).withSecond(0).withNano(0);
+        Agendamento original = Agendamento.reconstituir(null, pacienteOriginal.getId(), 42L,
+                new PeriodoAtendimento(inicio, inicio.plusMinutes(30)),
+                StatusAgendamento.CONFIRMADO,
+                List.of(ProcedimentoAgendado.pendente(procedimento.getId())), null);
+        agendamentos.salvar(original);
+
+        Agendamento atualizado = Agendamento.reconstituir(original.getId(), novoPaciente.getId(), 99L,
+                new PeriodoAtendimento(inicio.plusDays(1), inicio.plusDays(1).plusMinutes(30)),
+                StatusAgendamento.CONFIRMADO,
+                List.of(ProcedimentoAgendado.pendente(procedimento.getId())), null);
+        agendamentos.salvar(atualizado);
+
+        Agendamento recuperado = agendamentos.buscarPorId(original.getId()).orElseThrow();
+
+        assertEquals(novoPaciente.getId(), recuperado.getPacienteId());
+        assertEquals(99L, recuperado.getProfissionalId());
+    }
+
+    @Test
     void deveRemoverProcedimentosAssociadosAoAtualizarComListaVazia() {
         Paciente paciente = pacientes.salvar(Paciente.novo("Marcos Rocha"));
         Procedimento procedimento = procedimentos.salvar(new Procedimento(null, "Avaliação"));
