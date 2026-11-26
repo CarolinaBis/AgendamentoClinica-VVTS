@@ -205,6 +205,15 @@ class AgendamentoRepositoryPersistenceTest {
     }
 
     @Test
+    void deveRetornarVazioParaConsultasComFiltrosNulosOuSemResultados() {
+        assertTrue(agendamentos.buscarPorId(null).isEmpty());
+        assertTrue(agendamentos.buscarPorProfissional(null).isEmpty());
+        assertTrue(agendamentos.buscarPorProfissional(Long.MAX_VALUE).isEmpty());
+        assertTrue(agendamentos.buscarPorPaciente(null).isEmpty());
+        assertTrue(agendamentos.buscarPorPaciente(Long.MAX_VALUE).isEmpty());
+    }
+
+    @Test
     void deveRejeitarAgendamentoDePacienteInexistente() {
         LocalDateTime inicio = LocalDateTime.of(2099, 6, 20, 9, 0);
         Agendamento agendamento = Agendamento.reconstituir(null, Long.MAX_VALUE, 42L,
