@@ -38,6 +38,11 @@ public abstract class BasePage {
         espera.until(ExpectedConditions.attributeContains(AVISO, "class", "erro"));
     }
 
+    public boolean temRolagemHorizontal() {
+        return (Boolean) ((JavascriptExecutor) driver).executeScript(
+                "return document.documentElement.scrollWidth > document.documentElement.clientWidth;");
+    }
+
     protected void preencher(By campo, String valor) {
         WebElement elemento = driver.findElement(campo);
         elemento.clear();

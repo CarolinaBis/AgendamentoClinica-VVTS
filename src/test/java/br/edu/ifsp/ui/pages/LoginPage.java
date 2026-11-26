@@ -31,4 +31,12 @@ public class LoginPage extends BasePage {
         return (Boolean) ((org.openqa.selenium.JavascriptExecutor) driver).executeScript(
                 "return document.getElementById('form-registrar').checkValidity();");
     }
+
+    public org.openqa.selenium.Rectangle areaDoCardEntrar() {
+        return driver.findElement(By.id("form-entrar")).getRect();
+    }
+
+    public org.openqa.selenium.Rectangle areaDoCardRegistrar() {
+        return driver.findElement(By.id("form-registrar")).getRect();
+    }
 }
