@@ -110,4 +110,23 @@ class AuthenticationApiIntegrationTest {
 
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM app_user", Integer.class));
     }
+
+    @Test
+    void deveAutenticarUsuarioERetornarToken() throws Exception {
+        String email = "ana.souza@example.com";
+        String senha = "Senha-forte-123!";
+        usuarios.save(new User(UUID.randomUUID(), "Ana", "Souza", email,
+                passwordEncoder.encode(senha), Role.USER));
+
+        mockMvc.perform(post("/api/v1/authenticate")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "%s",
+                                  "password": "%s"
+                                }
+                                """.formatted(email, senha)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty());
+    }
 }
