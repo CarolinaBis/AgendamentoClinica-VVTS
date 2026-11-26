@@ -14,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(properties = "spring.datasource.url=jdbc:sqlite:target/user-persistence-tests.db")
 @Tag("PersistenceTest")
@@ -51,5 +52,25 @@ class JdbcUserRepositoryPersistenceTest {
         assertEquals("ana@example.com", recuperado.getEmail());
         assertEquals("senha-hash", recuperado.getPassword());
         assertEquals(Role.USER, recuperado.getRole());
+    }
+
+    @Test
+    void deveAtualizarUsuarioExistenteSemCriarOutroRegistro() {
+        UUID id = UUID.randomUUID();
+        usuarios.save(new User(id, "Ana", "Souza", "ana@example.com", "senha-antiga", Role.USER));
+        User atualizado = new User(id, "Ana Maria", "Oliveira", "ana.maria@example.com",
+                "senha-nova", Role.ADMIN);
+
+        usuarios.save(atualizado);
+
+        User recuperado = usuarios.findByEmail("ana.maria@example.com").orElseThrow();
+        assertEquals(id, recuperado.getId());
+        assertEquals("Ana Maria", recuperado.getName());
+        assertEquals("Oliveira", recuperado.getLastname());
+        assertEquals("ana.maria@example.com", recuperado.getEmail());
+        assertEquals("senha-nova", recuperado.getPassword());
+        assertEquals(Role.ADMIN, recuperado.getRole());
+        assertTrue(usuarios.findByEmail("ana@example.com").isEmpty());
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM app_user", Integer.class));
     }
 }
